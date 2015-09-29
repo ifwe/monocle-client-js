@@ -38,9 +38,9 @@
 
     var context = typeof exports !== 'undefined' ? exports : window;
 
-    AngularAdapter.$inject = ['$http', '$window'];
-    function AngularAdapter($http, $window) {
+    function AngularAdapter($http, $q, $window) {
         this._$http = $http;
+        this._$q = $q;
         this._$window = $window;
         this._timeout = 10000;
     }
@@ -62,8 +62,12 @@
             url: path,
             timeout: this._timeout,
             headers: headers
-        }).then(function(result) {
-            return result.data;
+        })
+        .catch(function(response) {
+            return this._$q.reject(response.data);
+        }.bind(this))
+        .then(function(response) {
+            return response.data;
         });
     };
 
@@ -98,8 +102,8 @@
                 this._base = base;
             };
 
-            this.$get = ['$http', '$q', '$window', function($http, $q, $window) {
-                var angularAdapter = new Monocle.AngularAdapter($http, $window);
+            this.$get = function($http, $q, $window) {
+                var angularAdapter = new Monocle.AngularAdapter($http, $q, $window);
                 var monocle = new Monocle(angularAdapter);
                 monocle.setBase(this._base);
 
@@ -111,7 +115,8 @@
                 }.bind(this));
 
                 return monocle;
-            }];
+            };
+            this.$get.$provide = ['$http', '$q', '$window'];
         });
     };
 

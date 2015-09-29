@@ -22,7 +22,8 @@ api.route('/users/:userId', {
     type: 'object',
     properties: {
         userId: { type: 'integer' },
-        displayName: { type: 'string' }
+        displayName: { type: 'string' },
+        age: { type: 'integer' }
     }
 }, {
     // Complex resources may need multiple callback handlers to support different properties.
@@ -31,12 +32,13 @@ api.route('/users/:userId', {
         return new Promise(function(resolve, reject) {
             process.nextTick(function() {
                 var userId = req.getParam('userId');
-                if (userId < 100) {
-                    resolve({
+                if (userId > 0 && userId < 100) {
+                    // within range of acceptible user ids
+                    return resolve({
                         userId: userId,
-                        displayName: 'FPO Display Name ' + userId
+                        displayName: 'FPO Display Name ' + userId,
+                        age: 27
                     });
-                    return;
                 }
 
                 reject('Invalid user id');

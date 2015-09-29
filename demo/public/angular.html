@@ -1,17 +1,54 @@
 <!DOCTYPE html>
 <html ng-app="MyApp">
 <head>
-<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.js"></script>
+<script type="text/javascript" src="./angular-1.4.5.js"></script>
 <script type="text/javascript" src="./monocle-api-client-angular.js"></script>
 </head>
-<body ng-controller="DemoCtrl" ng-cloak>
-    <div ng-if="user">
-        <h1>User</h1>
-        <pre>{{ user | json:2 }}</pre>
+<body ng-controller="DemoCtrl as demo" ng-cloak>
+    <style type="text/css">
+    body{
+        font-family: arial;
+        font-size: 100%;
+        margin: 1em;
+        padding: 0;
+    }
+
+    form.user-selector{
+        display: block;
+        padding: 1em 0;
+    }
+
+    .box{
+        padding: 1em;
+        border-radius: 0.25em;
+        box-shadow: 0 0.25em 0.25em -0.15em rgba(0, 0, 0, 0.25);
+    }
+
+    .user{
+        border: 1px solid #5c5;
+        background: #dfd;
+    }
+
+    .error{
+        border: 1px solid #c55;
+        background: #fdd;
+    }
+
+    h1, h2, h3, h4, h5, h6{
+        margin: 0;
+        padding: 0;
+    }
+    </style>
+    <form class="user-selector">
+        <label>User ID: <input type="number" minimum="0" maximum="200" ng-model="demo.userId" autofocus /></label>
+    </form>
+    <div class="user box" ng-if="demo.user">
+        <h1>User {{ demo.userId }}</h1>
+        <pre>{{ demo.user | json:2 }}</pre>
     </div>
-    <div ng-if="error">
+    <div class="error box" ng-if="demo.error">
         <h1>Error</h1>
-        <pre>{{ error | json:2 }}</pre>
+        <pre>{{ demo.error | json:2 }}</pre>
     </div>
 </body>
 
@@ -25,17 +62,24 @@ app.config(function(monocleProvider) {
 app.service('Users', function(monocle) {
     this.get = function(id) {
         return monocle.get('/users/' + id, {
-            params: ['userId', 'displayName']
+            params: ['userId']
         });
     };
 });
 
-app.controller('DemoCtrl', function($scope, Users) {
-   Users.get(5).then(function(user) {
-        $scope.user = user;
-    }).catch(function(error) {
-        $scope.error = error;
-    });
+app.controller('DemoCtrl', function(Users, $scope) {
+    this.userId = 1;
+    $scope.$watch(function() {
+        return this.userId;
+    }.bind(this), function(userId) {
+        this.user = null;
+        this.error = null;
+        Users.get(userId).then(function(user) {
+            this.user = user;
+        }.bind(this)).catch(function(error) {
+            this.error = error;
+        }.bind(this));
+    }.bind(this));
 });
 </script>
 </html>

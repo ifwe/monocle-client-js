@@ -1,11 +1,13 @@
-return;
 /*jshint expr: true*/
 var wrapper = require(LIB_DIR + '/wrappers/angular');
 
 describe('Angular Wrapper', function() {
     beforeEach(function() {
+        this.providers = {};
         this.module = {
-            factory: sinon.spy()
+            provider: sinon.spy(function(name, provider) {
+                this.providers[name] = provider;
+            }.bind(this))
         };
 
         this.angular = {
@@ -14,34 +16,49 @@ describe('Angular Wrapper', function() {
             }.bind(this))
         };
 
-        this.TaggedApi = sinon.spy();
-        this.TaggedApi.AngularAdapter = sinon.spy();
+        this.Monocle = sinon.spy();
+        this.Monocle.prototype.setBase = sinon.spy();
+        this.Monocle.AngularAdapter = sinon.spy();
 
-        wrapper(this.angular, this.TaggedApi);
+        wrapper(this.angular, this.Monocle);
     });
 
     it('registers module "tagged.service.api"', function() {
         this.angular.module.calledOnce.should.be.true;
-        this.angular.module.lastCall.args[0].should.equal('tagged.service.api');
+        this.angular.module.lastCall.args[0].should.equal('monocle');
     });
 
-    it('registers factory "taggedApi"', function() {
-        this.module.factory.calledOnce.should.be.true;
-        this.module.factory.lastCall.args[0].should.equal('taggedApi');
+    it('registers provider "monocle"', function() {
+        this.module.provider.calledWith('monocle').should.be.true;
     });
 
-    it('returns a new TaggedApi instance', function() {
-        var $http = {};
-        var $q = {};
-        var api = this.module.factory.lastCall.args[1]($http, $q);
-        api.should.be.instanceOf(this.TaggedApi);
-    });
+    describe('$get()', function() {
+        it('returns a new Monocle instance', function() {
+            var $http = {};
+            var $q = {};
+            var $window = {};
+            var provider = new (this.providers.monocle)();
+            var api = provider.$get($http, $q, $window);
+            api.should.be.instanceOf(this.Monocle);
+        });
 
-    it('injects an instance of the Angular adapter', function() {
-        var $http = {};
-        var $q = {};
-        var api = this.module.factory.lastCall.args[1]($http, $q);
-        this.TaggedApi.lastCall.args[2].should.be.instanceOf(this.TaggedApi.AngularAdapter);
-    });
+        it('injects an instance of the Angular adapter', function() {
+            var $http = {};
+            var $q = {};
+            var $window = {};
+            var provider = new (this.providers.monocle)();
+            var api = provider.$get($http, $q, $window);
+            this.Monocle.lastCall.args[0].should.be.instanceOf(this.Monocle.AngularAdapter);
+        });
 
+        it('sets base path', function() {
+            var $http = {};
+            var $q = {};
+            var $window = {};
+            var provider = new (this.providers.monocle)();
+            provider.setBase('/test');
+            var api = provider.$get($http, $q, $window);
+            this.Monocle.prototype.setBase.calledWith('/test').should.be.true;
+        });
+    });
 });

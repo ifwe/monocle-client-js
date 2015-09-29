@@ -15,7 +15,7 @@ describe('Node HTTP Adapter', function() {
 
     ['get', 'post', 'put', 'patch', 'delete'].forEach(function(method) {
         var methodAsync = (method === 'delete' ? 'del' : method) + 'Async';
-        describe(method + '()', function() {
+        describe('with http method: ' + method, function() {
             beforeEach(function() {
                 this.path = '/foo';
                 this.options = undefined;

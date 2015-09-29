@@ -1,5 +1,5 @@
 {
-  "name": "tagged-api",
+  "name": "monocle-api-client-js",
   "version": "0.0.0",
   "description": "JS client for Monocle APIs",
   "main": "lib/index.js",
