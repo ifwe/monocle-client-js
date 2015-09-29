@@ -24,7 +24,7 @@ module.exports = function(grunt) {
         concat: {
             angular: {
                 src: ['lib/index.js', 'lib/http_adapter/angular.js', 'lib/wrappers/angular.js'],
-                dest: 'monocle-api-client-angular.js',
+                dest: 'monocle-client-angular.js',
                 options: {
                     footer: 'Monocle.angularWrapper(angular, Monocle);'
                 }
@@ -99,7 +99,7 @@ module.exports = function(grunt) {
         uglify: {
             angular: {
                 files: {
-                    'monocle-api-client-angular-min.js': ['monocle-api-client-angular.js']
+                    'monocle-client-angular-min.js': ['monocle-client-angular.js']
                 }
             }
         },

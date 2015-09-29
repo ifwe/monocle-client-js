@@ -1,11 +1,11 @@
 {
-  "name": "monocle-api-client",
+  "name": "monocle-client-js",
   "version": "0.0.0",
   "authors": [
     "Hector Virgen <hvirgen@ifwe.co>"
   ],
   "description": "Monocle API Client for Node and the Browser",
-  "main": "monocle-api-client.js",
+  "main": "monocle-client-angular.js",
   "keywords": [
     "Monocle",
     "Angular",

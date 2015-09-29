@@ -1,11 +1,11 @@
 {
-  "name": "monocle-api-client-js",
+  "name": "monocle-client-js",
   "version": "0.0.0",
   "description": "JS client for Monocle APIs",
   "main": "lib/index.js",
   "scripts": {
     "test": "grunt test",
-    "demo": "grunt build && cp monocle-api-client-angular.js demo/public && nodemon demo/index.js"
+    "demo": "grunt build && cp monocle-client-angular.js demo/public && nodemon demo/index.js"
   },
   "repository": {
     "type": "git",
@@ -21,13 +21,13 @@
   "author": "Web Team Awesome",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/ifwe/api-client-js/issues"
+    "url": "https://github.com/ifwe/monocle-client-js/issues"
   },
   "dependencies": {
     "bluebird": "2.10.1",
     "request": "2.37.0"
   },
-  "homepage": "https://github.com/ifwe/api-client-js",
+  "homepage": "https://github.com/ifwe/monocle-client-js",
   "devDependencies": {
     "blanket": "1.1.6",
     "chai": "1.9.1",
