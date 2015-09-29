@@ -18,12 +18,23 @@ Getting started with Monocle is simple:
 var app = angular.module('app', ['monocle']);
 
 // Inject `monocle` to gain easy access to a Monocle-powered API
-app.service('Users', function(monocle) {
-    this.get = function(userId) {
-        return monocle.get('/users/' + userId, {
-            props: ['userId', 'displayName', 'age']
-        });
-    };
+app.factory('Users', function(monocle) {
+    return new monocle.Resource('/users/:userId');
+});
+```
+
+Flexibility
+-----------
+
+Not all API consumers will need the full resource. You can pick and choose which properties you're interested in when creating a resource:
+
+```js
+app.factory('Users', function(monocle) {
+    return new monocle.Resource('/users/:userId', [
+        'userId',
+        'displayName',
+        'age'
+    ]);
 });
 ```
 
