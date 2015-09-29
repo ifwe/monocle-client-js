@@ -1,17 +1,14 @@
-return;
 var AngularAdapter = require(LIB_DIR + '/http_adapter/angular');
 var Promise = context.Promise || require('bluebird');
 
 describe('Angular Adapter', function() {
     beforeEach(function() {
-        this.$http = {
-            post: sinon.spy(function() {
-                return new Promise(function(resolve, reject) {
-                    this.resolve = resolve;
-                    this.reject = reject;
-                }.bind(this));
-            }.bind(this))
-        };
+        this.$http = sinon.spy(function() {
+            return new Promise(function(resolve, reject) {
+                this.resolve = resolve;
+                this.reject = reject;
+            }.bind(this));
+        }.bind(this));
         this.$window = {
             location: {
                 href: '/foo'
@@ -34,95 +31,39 @@ describe('Angular Adapter', function() {
         AngularAdapter.$inject.should.contain('$window');
     });
 
-    describe('post()', function() {
+    describe('request()', function() {
         it('is a function', function() {
-            this.adapter.post.should.be.a('function');
+            this.adapter.request.should.be.a('function');
         });
 
-        it('POSTs request using $http', function() {
-            var url = 'http://example.com/foo';
-            var body = 'post body';
-            this.adapter.post({
-                url: url,
-                body: body
-            });
-            this.$http.post.calledOnce.should.be.true;
-            this.$http.post.lastCall.args[0].should.equal(url);
-            this.$http.post.lastCall.args[1].should.equal(body);
-        });
-
-        it('formats resolved response', function() {
-            var url = 'http://example.com/foo';
-            var body = 'post body';
-            var result = this.adapter.post({
-                url: url,
-                body: body
-            });
-            this.resolve({
-                data: 'some data'
-            });
-            result.should.become({ body: 'some data'});
-        });
-
-        it('sets client ID and url in headers', function() {
-            var url = 'http://example.com/foo';
-            var body = 'post body';
-            var clientId = 'testclientid';
-            var location = '/foo';
-            this.adapter.post({
-                url: url,
-                body: body,
-                clientId: clientId
-            });
-            this.$http.post.calledOnce.should.be.true;
-            this.$http.post.lastCall.args[2].should.have.property('headers');
-            this.$http.post.lastCall.args[2].headers['x-tagged-client-id'].should.equal(clientId);
-            this.$http.post.lastCall.args[2].headers['x-tagged-client-url'].should.equal(location);
-        });
-
-        it('sets content-type header', function() {
-            var url = 'http://example.com/foo';
-            var body = 'post body';
-            var expectedContentType = 'application/x-www-form-urlencoded; charset=UTF-8';
-            this.adapter.post({
-                url: url,
-                body: body
-            });
-            this.$http.post.calledOnce.should.be.true;
-            this.$http.post.lastCall.args[2].headers.should.have.property('Content-Type', expectedContentType);
-        });
-
-        it('sets ajax header', function() {
-            var url = 'http://example.com/foo';
-            var body = 'post body';
-            this.adapter.post({
-                url: url,
-                body: body
-            });
-            this.$http.post.calledOnce.should.be.true;
-            this.$http.post.lastCall.args[2].headers.should.have.property('X-Requested-With', 'XMLHttpRequest');
-        });
-
-        describe('timeout', function() {
-            it('defaults to 10s', function() {
-                this.adapter.post({
-                    url: 'url',
-                    body: 'body'
-                });
-                this.$http.post.lastCall.args[2].should.contain({
-                    timeout: 10000
+        ['get', 'post', 'put', 'patch', 'delete'].forEach(function(method) {
+            it('makes ' + method + ' request using $http', function() {
+                this.adapter.request(method, '/foo');
+                this.$http.calledWith({
+                    url: '/foo',
+                    method: method.toUpperCase()
                 });
             });
 
-            it('can be overwritten', function() {
-                this.adapter.setTimeout(30000);
-                this.adapter.post({
-                    url: 'url',
-                    body: 'body'
+            it('formats resolved ' + method + ' response', function() {
+                var result = this.adapter.request(method, '/foo');
+                this.resolve({ data:
+                    { body: 'some data' }
                 });
-                this.$http.post.lastCall.args[2].should.contain({
-                    timeout: 30000
+                return result.then(function(value) {
+                    value.should.deep.equal({ body: 'some data'});
                 });
+            });
+
+            it('sets content-type header', function() {
+                this.adapter.request(method, '/foo');
+                var expectedContentType = 'application/x-www-form-urlencoded; charset=UTF-8';
+                this.$http.lastCall.args[0].headers.should.have.property('Content-Type', expectedContentType);
+            });
+
+            it('sets ajax header', function() {
+                this.adapter.request(method, '/foo');
+                this.$http.lastCall.args[0].headers.should.have.property('X-Requested-With', 'XMLHttpRequest');
             });
         });
     });
