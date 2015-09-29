@@ -30,7 +30,7 @@ api.route('/users/:userId', {
     // The API router will figure out which callbacks are necessary to satisfy the incoming request.
     get: function(req) {
         return new Promise(function(resolve, reject) {
-            process.nextTick(function() {
+            setTimeout(function() {
                 var userId = req.getParam('userId');
                 if (userId > 0 && userId < 100) {
                     // within range of acceptible user ids
@@ -42,7 +42,7 @@ api.route('/users/:userId', {
                 }
 
                 reject('Invalid user id');
-            });
+            }, 200);
         });
     }
 });

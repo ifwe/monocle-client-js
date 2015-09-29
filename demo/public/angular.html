@@ -4,13 +4,31 @@
 <script type="text/javascript" src="./angular-1.4.5.js"></script>
 <script type="text/javascript" src="./monocle-client-angular.js"></script>
 </head>
-<body ng-controller="DemoCtrl as demo" ng-cloak>
+<body ng-controller="DemoCtrl as demo" ng-cloak ng-class="{ 'fetching' : demo.fetching }">
     <style type="text/css">
     body{
         font-family: arial;
         font-size: 100%;
-        margin: 1em;
+        margin: 1rem;
         padding: 0;
+        transition: opacity 0.15s ease;
+    }
+
+    *{
+        outline: none;
+    }
+
+    .fetching{
+        opacity: 0.5;
+    }
+
+    header{
+        background: #111;
+        color: #fff;
+        font-size: 2em;
+        margin: -1rem -1rem 1rem;
+        padding: 1rem;
+        box-shadow: 0 -0.75em 0.25em 1em rgba(0, 0, 0, 0.15);
     }
 
     form.user-selector{
@@ -20,17 +38,17 @@
 
     .box{
         padding: 1em;
-        border-radius: 0.25em;
+        border-radius: 0.15em;
         box-shadow: 0 0.25em 0.25em -0.15em rgba(0, 0, 0, 0.25);
     }
 
     .user{
-        border: 1px solid #5c5;
+        border: 1px solid #cec;
         background: #dfd;
     }
 
     .error{
-        border: 1px solid #c55;
+        border: 1px solid #ecc;
         background: #fdd;
     }
 
@@ -38,7 +56,23 @@
         margin: 0;
         padding: 0;
     }
+
+    button{
+        margin-top: 0.5rem;
+        font-size: 1.25em;
+        padding: 0.25em 1.5em;
+        font-weight: bold;
+        border-radius: 0.15em;
+        background: #f2f4f6;
+        border: 1px solid #bbb;
+        box-shadow: 0 0.15em 0.25em -0.05em rgba(0, 0, 0, 0.25),
+            inset 0 -0.75em 0.75em -0.5em rgba(0, 0, 0, 0.15),
+            inset 0 0.45em 0.5em -0.25em rgba(255, 255, 255, 0.95);
+    }
     </style>
+    <header>
+        Monocle Client for Angular Demo
+    </header>
     <form class="user-selector" ng-submit="demo.fetch()">
         <div>
             <label>
@@ -111,11 +145,15 @@ app.controller('DemoCtrl', function(Users, $scope) {
     this.userId = 1;
     this.fetch = function() {
         this.error = null;
+        this.fetching = true;
         Users.get(this.userId).then(function(user) {
             this.user = user;
         }.bind(this)).catch(function(error) {
             this.user = null;
             this.error = error;
+        }.bind(this))
+        .finally(function() {
+            this.fetching = false;
         }.bind(this));
     };
 });
