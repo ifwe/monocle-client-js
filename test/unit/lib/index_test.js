@@ -1,12 +1,12 @@
 /*jshint expr: true*/
-var MonocleApiClient = require(LIB_DIR);
+var Monocle = require(LIB_DIR);
 var HttpMock = require('./mocks/http.js');
 
-describe('Monocle API Client for JavaScript', function() {
+describe('Monocle API Client', function() {
     beforeEach(function() {
         this.http = new HttpMock();
         sinon.spy(this.http, 'request');
-        this.api = new MonocleApiClient(this.http);
+        this.api = new Monocle(this.http);
         this.clock = sinon.useFakeTimers();
     });
 
@@ -15,7 +15,7 @@ describe('Monocle API Client for JavaScript', function() {
     });
 
     it('is a constructor', function() {
-        MonocleApiClient.should.be.a('function');
+        Monocle.should.be.a('function');
     });
 
     describe('Common functionality across HTTP methods', function() {
