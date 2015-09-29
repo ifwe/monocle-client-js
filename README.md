@@ -11,14 +11,29 @@ Getting started with Monocle is simple:
 
 1. Add Angular and Monocle scripts to your page
 2. Add `monocle` as a dependency to your Angular application.
-3. Configure your Monocle client (optional)
-4. Inject `monocle` and start making API calls!
+3. Inject `monocle` and start making API calls!
 
 ```js
 // Add `monocle` as a dependency:
 var app = angular.module('app', ['monocle']);
 
-// Optionally configure the Monocle client:
+// Inject `monocle` to gain easy access to a Monocle-powered API
+app.service('Users', function(monocle) {
+    this.get = function(userId) {
+        return monocle.get('/users/' + userId, {
+            props: ['userId', 'displayName', 'age']
+        });
+    };
+});
+```
+
+Configuration
+-------------
+
+The monocle client can be configured in your app's config phase.
+
+```js
+// Configure the Monocle client:
 app.config(function(monocleProvider) {
     // Set the base path for API calls.
     // All API calls will automatically be mounted onto this base path.
@@ -47,14 +62,5 @@ app.config(function(monocleProvider) {
     monocleProvider.setHeader('x-custom-promise-callback', function() {
         return Promise.resolve('test-custom-promise-callback');
     });
-});
-
-// Inject `monocle` to gain easy access to a Monocle-powered API
-app.service('Users', function(monocle) {
-    this.get = function(userId) {
-        return monocle.get('/users/' + userId, {
-            props: ['userId', 'displayName', 'age']
-        });
-    };
 });
 ```
