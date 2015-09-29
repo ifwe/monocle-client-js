@@ -1,0 +1,46 @@
+{
+  "name": "tagged-api",
+  "version": "0.0.0",
+  "description": "JS client for Monocle APIs",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "grunt test",
+    "demo": "grunt build && cp monocle-api-client-angular.js demo/public && nodemon demo/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/ifwe/monocle-api-client-js.git"
+  },
+  "keywords": [
+    "monocle",
+    "monocle-api",
+    "api",
+    "tagged",
+    "client"
+  ],
+  "author": "Web Team Awesome",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ifwe/api-client-js/issues"
+  },
+  "dependencies": {
+    "bluebird": "2.10.1",
+    "request": "2.37.0"
+  },
+  "homepage": "https://github.com/ifwe/api-client-js",
+  "devDependencies": {
+    "blanket": "1.1.6",
+    "chai": "1.9.1",
+    "chai-as-promised": "4.1.1",
+    "grunt": "0.4.5",
+    "grunt-contrib-clean": "0.5.0",
+    "grunt-contrib-concat": "0.5.0",
+    "grunt-contrib-uglify": "0.5.0",
+    "grunt-contrib-watch": "0.6.1",
+    "grunt-docco": "0.3.3",
+    "grunt-mocha-test": "0.11.0",
+    "memwatch": "0.2.2",
+    "mocha": "1.20.1",
+    "sinon": "1.10.3"
+  }
+}

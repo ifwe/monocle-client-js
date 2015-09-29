@@ -1,0 +1,25 @@
+{
+  "name": "monocle-api-client",
+  "version": "0.0.0",
+  "authors": [
+    "Hector Virgen <hvirgen@ifwe.co>"
+  ],
+  "description": "Monocle API Client for Node and the Browser",
+  "main": "monocle-api-client.js",
+  "keywords": [
+    "Monocle",
+    "Angular",
+    "Api"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "demo",
+    "node_modules",
+    "bower_components",
+    "test"
+  ],
+  "dependencies": {
+    "angular": "~1.4.5"
+  }
+}

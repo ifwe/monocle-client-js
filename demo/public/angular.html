@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html ng-app="MyApp">
+<head>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.js"></script>
+<script type="text/javascript" src="./monocle-api-client-angular.js"></script>
+</head>
+<body ng-controller="DemoCtrl" ng-cloak>
+    <div ng-if="user">
+        <h1>User</h1>
+        <pre>{{ user | json:2 }}</pre>
+    </div>
+    <div ng-if="error">
+        <h1>Error</h1>
+        <pre>{{ error | json:2 }}</pre>
+    </div>
+</body>
+
+<script type="text/javascript">
+var app = angular.module("MyApp", ['monocle']);
+
+app.config(function(monocleProvider) {
+    monocleProvider.setBase('/demo');
+});
+
+app.service('Users', function(monocle) {
+    this.get = function(id) {
+        return monocle.get('/users/' + id, {
+            params: ['userId', 'displayName']
+        });
+    };
+});
+
+app.controller('DemoCtrl', function($scope, Users) {
+   Users.get(5).then(function(user) {
+        $scope.user = user;
+    }).catch(function(error) {
+        $scope.error = error;
+    });
+});
+</script>
+</html>
