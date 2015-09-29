@@ -39,6 +39,16 @@ describe('Monocle API Client', function() {
                     this.http.request.calledWith(method.toUpperCase(), '/my-base/foo').should.be.true;
                 });
 
+                it('appends props as a query string parameter', function() {
+                    this.http.mock(method, '/foo', {
+                        props: ['alpha', 'beta', 'gamma']
+                    });
+                    this.api[method]('/foo', {
+                        props: ['alpha', 'beta', 'gamma']
+                    });
+                    this.http.request.calledWith(method.toUpperCase(), '/foo?props=alpha%2Cbeta%2Cgamma').should.be.true;
+                });
+
                 it('resolves with value from successful HTTP call', function() {
                     this.http.mock(method, '/foo').resolvesWith({ foo: 'test foo' });
 

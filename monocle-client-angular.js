@@ -14,11 +14,26 @@
 
     Monocle.prototype.setBase = function(base) {
         this._base = base;
+        return this;
     };
 
     ['get', 'post', 'put', 'patch', 'delete', 'options'].forEach(function(method) {
         Monocle.prototype[method] = function(path, options) {
             var fullPath = (this._base + path).replace(/\/{2,}/g, '/');
+            var query = {};
+
+            if (options && options.props) {
+                query.props = options.props.join(',');
+            }
+
+            var queryStringParts = [];
+            for (var i in query) {
+                queryStringParts.push(encodeURIComponent(i) + '=' + encodeURIComponent(query[i]));
+            }
+            if (queryStringParts.length) {
+                fullPath += '?' + queryStringParts.join('&');
+            }
+
             return this._http.request(method.toUpperCase(), fullPath, options);
         };
     });
@@ -42,33 +57,66 @@
         this._$http = $http;
         this._$q = $q;
         this._$window = $window;
-        this._timeout = 10000;
-    }
-
-    AngularAdapter.prototype.setTimeout = function(timeout) {
-        this._timeout = parseInt(timeout, 10) || 10000;
-    };
-
-    AngularAdapter.prototype.request = function(method, path, options) {
-        var headers = {
-            // 'x-tagged-client-id': req.clientId,
-            'x-tagged-client-url': this._$window.location.href,
+        this._timeout = 30000;
+        this._headers = {
             'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
             'X-Requested-With': 'XMLHttpRequest'
         };
+    }
 
-        return this._$http({
-            method: method.toUpperCase(),
-            url: path,
-            timeout: this._timeout,
-            headers: headers
-        })
-        .catch(function(response) {
-            return this._$q.reject(response.data);
-        }.bind(this))
-        .then(function(response) {
-            return response.data;
-        });
+    AngularAdapter.prototype.setTimeout = function(timeout) {
+        this._timeout = parseInt(timeout, 10) || 30000;
+        return this;
+    };
+
+    AngularAdapter.prototype.setHeader = function(key, value) {
+        this._headers[key] = value;
+    };
+
+    AngularAdapter.prototype.setHeaders = function(headers) {
+        for (var i in headers) {
+            if (!headers.hasOwnProperty(i)) continue;
+            this.setHeader(i, headers[i]);
+        }
+    };
+
+    AngularAdapter.prototype.request = function(method, path, options) {
+        var headerPromises = [];
+        var headerKeys = [];
+
+        for (var i in this._headers) {
+            if (!this._headers.hasOwnProperty(i)) continue;
+
+            if (typeof this._headers[i] === 'function') {
+                headerPromises.push(this._headers[i]());
+                headerKeys.push(i);
+                continue;
+            }
+
+            headerPromises.push(this._headers[i]);
+            headerKeys.push(i);
+        }
+
+        return this._$q.all(headerPromises)
+        .then(function(results) {
+            var headers = {};
+            for (var i = 0, len = results.length; i < len; i++) {
+                headers[headerKeys[i]] = results[i];
+            }
+
+            return this._$http({
+                method: method.toUpperCase(),
+                url: path,
+                timeout: this._timeout,
+                headers: headers
+            })
+            .catch(function(response) {
+                return this._$q.reject(response.data);
+            }.bind(this))
+            .then(function(response) {
+                return response.data;
+            });
+        }.bind(this));
     };
 
     if (typeof exports !== 'undefined') {
@@ -96,26 +144,32 @@
         // Register the `monocle` provider.
         module.provider('monocle', function monocleProvider() {
             this._base = '/';
-            // monocleProvider.timeout = 30000;
+            this._timeout = 30000;
+            this._headers = {};
 
             this.setBase = function(base) {
                 this._base = base;
             };
 
+            this.setTimeout = function(timeout) {
+                this._timeout = parseInt(timeout, 10) || 30000;
+            };
+
+            this.setHeader = function(key, value) {
+                this._headers[key] = value;
+            };
+
             this.$get = function($http, $q, $window) {
                 var angularAdapter = new Monocle.AngularAdapter($http, $q, $window);
+                angularAdapter.setTimeout(this._timeout);
+                angularAdapter.setHeaders(this._headers);
+
                 var monocle = new Monocle(angularAdapter);
                 monocle.setBase(this._base);
 
-                // Wrap HTTP methods in an Angular promise
-                ['get', 'post', 'put', 'patch', 'delete', 'options'].forEach(function(method) {
-                    monocle[method] = function(path, options) {
-                        return $q.when(Monocle.prototype[method].call(this, path, options));
-                    };
-                }.bind(this));
-
                 return monocle;
             };
+
             this.$get.$provide = ['$http', '$q', '$window'];
         });
     };

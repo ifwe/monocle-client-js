@@ -3,7 +3,7 @@ TODO:
 
 Core
 ----
-- [ ] Support "props" options
+- [x] Support "props" options
 - [ ] Support "pluck" option
 - [ ] Add caching layer
 - [ ] Auto-batch requests
@@ -11,11 +11,11 @@ Core
 Angular Adapter
 ---------------
 
-- [ ] Support custom headers
-- [ ] Support custom timeout
+- [x] Support custom headers
+- [x] Support custom timeout
 
 Node Adapter
 ------------
 
-- [ ] Support custom headers
-- [ ] Support custom timeout
+- [x] Support custom headers
+- [x] Support custom timeout

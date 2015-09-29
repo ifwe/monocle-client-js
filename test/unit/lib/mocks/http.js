@@ -6,6 +6,7 @@ var HttpMock = function() {
 
 HttpMock.prototype.request = function(method, path, options) {
     var optionsJson = JSON.stringify(options);
+    var pathBase = path.replace(/\?.*/g, '');
 
     // Resolve if preconfigured
     for (var i = 0, len = this._mocks.length; i < len; i++) {
@@ -13,7 +14,7 @@ HttpMock.prototype.request = function(method, path, options) {
 
         var isMatch = (
             method === mock.method
-            && path === mock.path
+            && pathBase === mock.path
             && optionsJson === mock.optionsJson
         );
 

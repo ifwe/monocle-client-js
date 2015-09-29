@@ -39,11 +39,25 @@
         padding: 0;
     }
     </style>
-    <form class="user-selector">
-        <label>User ID: <input type="number" minimum="0" maximum="200" ng-model="demo.userId" autofocus /></label>
+    <form class="user-selector" ng-submit="demo.fetch()">
+        <div>
+            <label>
+                User ID:
+                <input type="number" minimum="0" maximum="200" ng-model="demo.userId" autofocus />
+            </label>
+        </div>
+        <div>
+            Properties
+            <label><input type="checkbox" ng-model="demo.Users.properties.userId">userId</label>
+            <label><input type="checkbox" ng-model="demo.Users.properties.displayName">displayName</label>
+            <label><input type="checkbox" ng-model="demo.Users.properties.age">age</label>
+        </div>
+        <div>
+            <button type="submit">Fetch!</button>
+        </div>
     </form>
     <div class="user box" ng-if="demo.user">
-        <h1>User {{ demo.userId }}</h1>
+        <h1>User</h1>
         <pre>{{ demo.user | json:2 }}</pre>
     </div>
     <div class="error box" ng-if="demo.error">
@@ -56,30 +70,54 @@
 var app = angular.module("MyApp", ['monocle']);
 
 app.config(function(monocleProvider) {
+    // Set the base path for API calls.
     monocleProvider.setBase('/demo');
+
+    // Set a custom timeout to be used by all requests.
+    monocleProvider.setTimeout(10000);
+
+    // Set a custom header by value.
+    monocleProvider.setHeader('x-custom-value', 'test-custom-value');
+
+    // Set a custom header by providing a callback function.
+    // The function will be called for each HTTP request to the Monocle server,
+    // and its return value will be the value for the header.
+    // If the function returns a promise, it will be resolved first.
+    monocleProvider.setHeader('x-custom-callback', function() {
+        return 'test-custom-callback-' + Math.random();
+    });
 });
 
 app.service('Users', function(monocle) {
+    this.properties = {
+        userId: true,
+        displayName: true,
+        age: false
+    };
+
     this.get = function(id) {
+        var props = Object.keys(this.properties)
+        .filter(function(prop) {
+            return this.properties[prop];
+        }.bind(this));
         return monocle.get('/users/' + id, {
-            params: ['userId']
+            props: props
         });
     };
 });
 
 app.controller('DemoCtrl', function(Users, $scope) {
+    this.Users = Users;
     this.userId = 1;
-    $scope.$watch(function() {
-        return this.userId;
-    }.bind(this), function(userId) {
-        this.user = null;
+    this.fetch = function() {
         this.error = null;
-        Users.get(userId).then(function(user) {
+        Users.get(this.userId).then(function(user) {
             this.user = user;
         }.bind(this)).catch(function(error) {
+            this.user = null;
             this.error = error;
         }.bind(this));
-    }.bind(this));
+    };
 });
 </script>
 </html>

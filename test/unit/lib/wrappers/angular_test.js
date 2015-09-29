@@ -19,6 +19,8 @@ describe('Angular Wrapper', function() {
         this.Monocle = sinon.spy();
         this.Monocle.prototype.setBase = sinon.spy();
         this.Monocle.AngularAdapter = sinon.spy();
+        this.Monocle.AngularAdapter.prototype.setTimeout = sinon.spy();
+        this.Monocle.AngularAdapter.prototype.setHeaders = sinon.spy();
 
         wrapper(this.angular, this.Monocle);
     });
