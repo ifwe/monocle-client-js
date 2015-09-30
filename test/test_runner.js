@@ -3,6 +3,9 @@ var path = require('path');
 // Use constant to help with resolving path to lib code within test files
 GLOBAL.LIB_DIR = path.join(process.cwd(), 'lib');
 
+// Set up promises
+GLOBAL.Promise = require('bluebird');
+
 // Set up in-place instrumentation for code coverage
 require('blanket')({ pattern: LIB_DIR });
 

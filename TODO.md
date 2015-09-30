@@ -5,7 +5,7 @@ Core
 ----
 - [x] Support "props" options
 - [ ] Support "pluck" option
-- [ ] Add caching layer
+- [x] Add caching layer
 - [ ] Auto-batch requests
 
 Angular Adapter

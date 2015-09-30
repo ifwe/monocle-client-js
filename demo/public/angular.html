@@ -90,13 +90,25 @@
             <button type="submit">Fetch!</button>
         </div>
     </form>
+
+    <div class="error box" ng-if="demo.error">
+        <h2>Error</h2>
+        <pre>{{ demo.error | json:2 }}</pre>
+    </div>
+
     <div class="user box" ng-if="demo.user">
-        <h1>User</h1>
+        <h2>User</h2>
         <pre>{{ demo.user | json:2 }}</pre>
     </div>
-    <div class="error box" ng-if="demo.error">
-        <h1>Error</h1>
-        <pre>{{ demo.error | json:2 }}</pre>
+
+    <div class="cached box">
+        <h2>Cache</h2>
+        <ul>
+            <li ng-repeat="(key, cache) in demo.cached">
+                <h3 ng-click="shown = !shown">{{ key }}</h3>
+                <pre ng-show="shown">{{ cache | json:2 }}</pre>
+            </li>
+        </ul>
     </div>
 </body>
 
@@ -134,26 +146,36 @@ app.service('Users', function(monocle) {
         .filter(function(prop) {
             return this.properties[prop];
         }.bind(this));
+
         return monocle.get('/users/' + id, {
             props: props
-        });
+        })
+        .finally(function() {
+            // Expose the cached items for demo purposes
+            this.cached = monocle.getCache().getAll();
+        }.bind(this));
     };
 });
 
 app.controller('DemoCtrl', function(Users, $scope) {
     this.Users = Users;
     this.userId = 1;
+
     this.fetch = function() {
         this.error = null;
         this.fetching = true;
-        Users.get(this.userId).then(function(user) {
+
+        Users.get(this.userId)
+        .then(function(user) {
             this.user = user;
-        }.bind(this)).catch(function(error) {
+        }.bind(this))
+        .catch(function(error) {
             this.user = null;
             this.error = error;
         }.bind(this))
         .finally(function() {
             this.fetching = false;
+            this.cached = Users.cached;
         }.bind(this));
     };
 });
