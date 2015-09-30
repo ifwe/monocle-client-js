@@ -1,5 +1,5 @@
 /*jshint expr: true*/
-var Monocle = require(LIB_DIR);
+var Monocle = require(LIB_DIR + '/monocle');
 var HttpMock = require('./mocks/http.js');
 
 describe('Monocle API Client', function() {

@@ -7,28 +7,17 @@ module.exports = function(grunt) {
 
     // NPM tasks, alphabetical
     grunt.loadNpmTasks('grunt-contrib-clean');
-    grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-docco');
     grunt.loadNpmTasks('grunt-mocha-test');
+    grunt.loadNpmTasks('grunt-webpack');
 
     grunt.initConfig({
         // Clean
         clean: {
             docs: ['docs'],
             coverage: ['test/coverage.html']
-        },
-
-        // Concat
-        concat: {
-            angular: {
-                src: ['lib/index.js', 'lib/http_adapter/angular.js', 'lib/wrappers/angular.js'],
-                dest: 'monocle-client-angular.js',
-                options: {
-                    footer: 'Monocle.angularWrapper(angular, Monocle);'
-                }
-            }
         },
 
         // Documentation
@@ -116,6 +105,21 @@ module.exports = function(grunt) {
                 ],
                 tasks: ['mochaTest:unit']
             }
+        },
+
+        webpack: {
+            angular: {
+                entry: './lib/angular.js',
+                output: {
+                    path: './',
+                    filename: 'monocle-client-angular.js'
+                },
+                stats: {
+                    colors: false,
+                    modules: true,
+                    reasons: true
+                }
+            }
         }
     });
 
@@ -138,5 +142,5 @@ module.exports = function(grunt) {
     grunt.registerTask('dev', 'Enables watchers for developing', ['watch:unit']);
 
     // Build concatenated/minified version for browsers
-    grunt.registerTask('build', 'Builds concatenated/minified versions for browsers', ['concat', 'uglify']);
+    grunt.registerTask('build', 'Builds concatenated/minified versions for browsers', ['webpack', 'uglify']);
 };

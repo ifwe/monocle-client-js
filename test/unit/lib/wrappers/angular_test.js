@@ -1,5 +1,6 @@
 /*jshint expr: true*/
 var wrapper = require(LIB_DIR + '/wrappers/angular');
+var AngularAdapter = require(LIB_DIR + '/http_adapter/angular');
 
 describe('Angular Wrapper', function() {
     beforeEach(function() {
@@ -18,9 +19,6 @@ describe('Angular Wrapper', function() {
 
         this.Monocle = sinon.spy();
         this.Monocle.prototype.setBase = sinon.spy();
-        this.Monocle.AngularAdapter = sinon.spy();
-        this.Monocle.AngularAdapter.prototype.setTimeout = sinon.spy();
-        this.Monocle.AngularAdapter.prototype.setHeaders = sinon.spy();
 
         wrapper(this.angular, this.Monocle);
     });
@@ -50,7 +48,7 @@ describe('Angular Wrapper', function() {
             var $window = {};
             var provider = new (this.providers.monocle)();
             var api = provider.$get($http, $q, $window);
-            this.Monocle.lastCall.args[0].should.be.instanceOf(this.Monocle.AngularAdapter);
+            this.Monocle.lastCall.args[0].should.be.instanceOf(AngularAdapter);
         });
 
         it('sets base path', function() {

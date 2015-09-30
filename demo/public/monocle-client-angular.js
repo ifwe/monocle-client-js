@@ -1,185 +1,216 @@
-// This file may run in a browser, so wrap it in an IIFE.
-(function() {
-    'use strict';
+/******/ (function(modules) { // webpackBootstrap
+/******/ 	// The module cache
+/******/ 	var installedModules = {};
 
-    var context = typeof exports !== 'undefined' ? exports : window;
-    if (typeof(require) === 'function') {
-        var Promise = context.Promise || require('bluebird');
-    }
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
 
-    var Monocle = function(http) {
-        this._http = http;
-        this._base = '/';
-    };
+/******/ 		// Check if module is in cache
+/******/ 		if(installedModules[moduleId])
+/******/ 			return installedModules[moduleId].exports;
 
-    Monocle.prototype.setBase = function(base) {
-        this._base = base;
-        return this;
-    };
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = installedModules[moduleId] = {
+/******/ 			exports: {},
+/******/ 			id: moduleId,
+/******/ 			loaded: false
+/******/ 		};
 
-    ['get', 'post', 'put', 'patch', 'delete', 'options'].forEach(function(method) {
-        Monocle.prototype[method] = function(path, options) {
-            var fullPath = (this._base + path).replace(/\/{2,}/g, '/');
-            var query = {};
+/******/ 		// Execute the module function
+/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
 
-            if (options && options.props) {
-                query.props = options.props.join(',');
-            }
+/******/ 		// Flag the module as loaded
+/******/ 		module.loaded = true;
 
-            var queryStringParts = [];
-            for (var i in query) {
-                queryStringParts.push(encodeURIComponent(i) + '=' + encodeURIComponent(query[i]));
-            }
-            if (queryStringParts.length) {
-                fullPath += '?' + queryStringParts.join('&');
-            }
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
 
-            return this._http.request(method.toUpperCase(), fullPath, options);
-        };
-    });
 
-    if (typeof exports !== 'undefined') {
-        // We're in a nodejs environment, export this module
-        module.exports = Monocle;
-    } else {
-        // We're in a browser environment, expose this module globally
-        context.Monocle = Monocle;
-    }
-})();
+/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	__webpack_require__.m = modules;
 
-// This file is generally run in a browser, so wrap it in an IIFE
-(function() {
-    'use strict';
+/******/ 	// expose the module cache
+/******/ 	__webpack_require__.c = installedModules;
 
-    var context = typeof exports !== 'undefined' ? exports : window;
+/******/ 	// __webpack_public_path__
+/******/ 	__webpack_require__.p = "";
 
-    function AngularAdapter($http, $q, $window) {
-        this._$http = $http;
-        this._$q = $q;
-        this._$window = $window;
-        this._timeout = 30000;
-        this._headers = {
-            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-            'X-Requested-With': 'XMLHttpRequest'
-        };
-    }
+/******/ 	// Load entry module and return exports
+/******/ 	return __webpack_require__(0);
+/******/ })
+/************************************************************************/
+/******/ ([
+/* 0 */
+/***/ function(module, exports, __webpack_require__) {
 
-    AngularAdapter.prototype.setTimeout = function(timeout) {
-        this._timeout = parseInt(timeout, 10) || 30000;
-        return this;
-    };
+	var monocle = __webpack_require__(1);
+	var wrapper = __webpack_require__(2);
+	wrapper(angular, monocle);
 
-    AngularAdapter.prototype.setHeader = function(key, value) {
-        this._headers[key] = value;
-    };
 
-    AngularAdapter.prototype.setHeaders = function(headers) {
-        for (var i in headers) {
-            if (!headers.hasOwnProperty(i)) continue;
-            this.setHeader(i, headers[i]);
-        }
-    };
+/***/ },
+/* 1 */
+/***/ function(module, exports) {
 
-    AngularAdapter.prototype.request = function(method, path, options) {
-        var headerPromises = [];
-        var headerKeys = [];
+	'use strict';
 
-        for (var i in this._headers) {
-            if (!this._headers.hasOwnProperty(i)) continue;
+	var Monocle = function(http) {
+	    this._http = http;
+	    this._base = '/';
+	};
 
-            if (typeof this._headers[i] === 'function') {
-                headerPromises.push(this._headers[i]());
-                headerKeys.push(i);
-                continue;
-            }
+	Monocle.prototype.setBase = function(base) {
+	    this._base = base;
+	    return this;
+	};
 
-            headerPromises.push(this._headers[i]);
-            headerKeys.push(i);
-        }
+	['get', 'post', 'put', 'patch', 'delete', 'options'].forEach(function(method) {
+	    Monocle.prototype[method] = function(path, options) {
+	        var fullPath = (this._base + path).replace(/\/{2,}/g, '/');
+	        var query = {};
 
-        return this._$q.all(headerPromises)
-        .then(function(results) {
-            var headers = {};
-            for (var i = 0, len = results.length; i < len; i++) {
-                headers[headerKeys[i]] = results[i];
-            }
+	        if (options && options.props) {
+	            query.props = options.props.join(',');
+	        }
 
-            return this._$http({
-                method: method.toUpperCase(),
-                url: path,
-                timeout: this._timeout,
-                headers: headers
-            })
-            .catch(function(response) {
-                return this._$q.reject(response.data);
-            }.bind(this))
-            .then(function(response) {
-                return response.data;
-            });
-        }.bind(this));
-    };
+	        var queryStringParts = [];
+	        for (var i in query) {
+	            queryStringParts.push(encodeURIComponent(i) + '=' + encodeURIComponent(query[i]));
+	        }
+	        if (queryStringParts.length) {
+	            fullPath += '?' + queryStringParts.join('&');
+	        }
 
-    if (typeof exports !== 'undefined') {
-        // We're in a nodejs environment, export this module (useful for unit testing)
-        module.exports = AngularAdapter;
-    } else {
-        // We're in a browser environment, export this module globally,
-        // attached to the TaggedApi module
-        var Monocle = context.Monocle || {};
-        Monocle.AngularAdapter = AngularAdapter;
-    }
-})();
+	        return this._http.request(method.toUpperCase(), fullPath, options);
+	    };
+	});
 
-// This file is generally run in a browser, so wrap it in an IIFE
-(function() {
-    'use strict';
+	module.exports = Monocle;
 
-    var wrapper = function(angular, Monocle) {
-        // ## Module: monocle
-        // Registers the module `monocle` with Angular,
-        // allowing Angular apps to declare this module as a dependency.
-        // This module has no dependencies of its own.
-        var module = angular.module('monocle', []);
 
-        // Register the `monocle` provider.
-        module.provider('monocle', function monocleProvider() {
-            this._base = '/';
-            this._timeout = 30000;
-            this._headers = {};
+/***/ },
+/* 2 */
+/***/ function(module, exports, __webpack_require__) {
 
-            this.setBase = function(base) {
-                this._base = base;
-            };
+	'use strict';
 
-            this.setTimeout = function(timeout) {
-                this._timeout = parseInt(timeout, 10) || 30000;
-            };
+	module.exports = function(angular, Monocle) {
+	    var AngularAdapter = __webpack_require__(3);
+	    // ## Module: monocle
+	    // Registers the module `monocle` with Angular,
+	    // allowing Angular apps to declare this module as a dependency.
+	    // This module has no dependencies of its own.
+	    var module = angular.module('monocle', []);
 
-            this.setHeader = function(key, value) {
-                this._headers[key] = value;
-            };
+	    // Register the `monocle` provider.
+	    module.provider('monocle', function monocleProvider() {
+	        this._base = '/';
+	        this._timeout = 30000;
+	        this._headers = {};
 
-            this.$get = function($http, $q, $window) {
-                var angularAdapter = new Monocle.AngularAdapter($http, $q, $window);
-                angularAdapter.setTimeout(this._timeout);
-                angularAdapter.setHeaders(this._headers);
+	        this.setBase = function(base) {
+	            this._base = base;
+	        };
 
-                var monocle = new Monocle(angularAdapter);
-                monocle.setBase(this._base);
+	        this.setTimeout = function(timeout) {
+	            this._timeout = parseInt(timeout, 10) || 30000;
+	        };
 
-                return monocle;
-            };
+	        this.setHeader = function(key, value) {
+	            this._headers[key] = value;
+	        };
 
-            this.$get.$provide = ['$http', '$q', '$window'];
-        });
-    };
+	        this.$get = function($http, $q, $window) {
+	            var angularAdapter = new AngularAdapter($http, $q, $window);
+	            angularAdapter.setTimeout(this._timeout);
+	            angularAdapter.setHeaders(this._headers);
 
-    if (typeof exports !== 'undefined') {
-        // We're in a nodejs environment, export this module
-        module.exports = wrapper;
-    } else {
-        // We're in a browser environment, expose this module globally
-        Monocle.angularWrapper = wrapper;
-    }
-})();
-Monocle.angularWrapper(angular, Monocle);
+	            var monocle = new Monocle(angularAdapter);
+	            monocle.setBase(this._base);
+
+	            return monocle;
+	        };
+
+	        this.$get.$provide = ['$http', '$q', '$window'];
+	    });
+	};
+
+
+/***/ },
+/* 3 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	function AngularAdapter($http, $q, $window) {
+	    this._$http = $http;
+	    this._$q = $q;
+	    this._$window = $window;
+	    this._timeout = 30000;
+	    this._headers = {
+	        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+	        'X-Requested-With': 'XMLHttpRequest'
+	    };
+	}
+
+	AngularAdapter.prototype.setTimeout = function(timeout) {
+	    this._timeout = parseInt(timeout, 10) || 30000;
+	    return this;
+	};
+
+	AngularAdapter.prototype.setHeader = function(key, value) {
+	    this._headers[key] = value;
+	};
+
+	AngularAdapter.prototype.setHeaders = function(headers) {
+	    for (var i in headers) {
+	        if (!headers.hasOwnProperty(i)) continue;
+	        this.setHeader(i, headers[i]);
+	    }
+	};
+
+	AngularAdapter.prototype.request = function(method, path, options) {
+	    var headerPromises = [];
+	    var headerKeys = [];
+
+	    for (var i in this._headers) {
+	        if (!this._headers.hasOwnProperty(i)) continue;
+
+	        if (typeof this._headers[i] === 'function') {
+	            headerPromises.push(this._headers[i]());
+	            headerKeys.push(i);
+	            continue;
+	        }
+
+	        headerPromises.push(this._headers[i]);
+	        headerKeys.push(i);
+	    }
+
+	    return this._$q.all(headerPromises)
+	    .then(function(results) {
+	        var headers = {};
+	        for (var i = 0, len = results.length; i < len; i++) {
+	            headers[headerKeys[i]] = results[i];
+	        }
+
+	        return this._$http({
+	            method: method.toUpperCase(),
+	            url: path,
+	            timeout: this._timeout,
+	            headers: headers
+	        })
+	        .catch(function(response) {
+	            return this._$q.reject(response.data);
+	        }.bind(this))
+	        .then(function(response) {
+	            return response.data;
+	        });
+	    }.bind(this));
+	};
+
+	module.exports = AngularAdapter;
+
+
+/***/ }
+/******/ ]);
