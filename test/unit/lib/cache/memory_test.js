@@ -39,6 +39,23 @@ describe('Memory Cache', function() {
             expect(this.cache.get('test_key_1')).to.be.undefined;
             expect(this.cache.get('test_key_2')).to.be.undefined;
         });
+
+        it('can get all', function() {
+            this.cache.put('test_key_1', 42);
+            this.cache.put('test_key_2', 84, 1000);
+            var all = this.cache.getAll();
+            all.should.be.an('object');
+            all.should.have.property('test_key_1');
+            all.should.have.property('test_key_2');
+
+            all.test_key_1.should.have.property('value', 42);
+            all.test_key_1.should.have.property('expiration', false);
+
+            all.test_key_2.should.have.property('value', 84);
+            all.test_key_2.should.have.property('expiration');
+            all.test_key_2.expiration.should.be.a('date');
+            all.test_key_2.expiration.should.eql(new Date(1000)); // loose comparison check
+        });
     });
 
     describe('expiration', function() {

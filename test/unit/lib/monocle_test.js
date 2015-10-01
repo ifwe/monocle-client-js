@@ -74,4 +74,52 @@ describe('Monocle API Client', function() {
             });
         });
     });
+
+    describe('caching', function() {
+        beforeEach(function() {
+            this.http.mock('GET', '/cacheable').resolvesWith({
+                foo: 'test cacheable',
+                $expires: 5000,
+                $id: '/cacheable'
+            });
+
+            this.http.mock('GET', '/uncacheable').resolvesWith({
+                foo: 'test uncacheable'
+            });
+        });
+
+        it('returns cached value if resource is cacheable and within time limit', function() {
+            return this.api.get('/cacheable')
+            .then(function(result1) {
+                return this.api.get('/cacheable')
+                .then(function(result2) {
+                    this.http.request.calledOnce.should.be.true;
+                    result1.should.equal(result2);
+                }.bind(this));
+            }.bind(this));
+        });
+
+        it('makes new http request if cached resource is expired', function() {
+            return this.api.get('/cacheable')
+            .then(function(result1) {
+                this.clock.tick(5001);
+                return this.api.get('/cacheable')
+                .then(function(result2) {
+                    this.http.request.calledTwice.should.be.true;
+                    result1.should.equal(result2);
+                }.bind(this));
+            }.bind(this));
+        });
+
+        it('makes new http request if resource is not cacheable', function() {
+            return this.api.get('/uncacheable')
+            .then(function(result1) {
+                return this.api.get('/uncacheable')
+                .then(function(result2) {
+                    this.http.request.calledTwice.should.be.true;
+                    result1.should.equal(result2);
+                }.bind(this));
+            }.bind(this));
+        });
+    });
 });

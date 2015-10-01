@@ -34,15 +34,15 @@ api.route('/users/:userId', {
                 var userId = req.getParam('userId');
                 if (userId > 0 && userId < 100) {
                     // within range of acceptible user ids
-                    return resolve({
+                    return resolve(new Monocle.Resource('/users/' + userId, {
                         userId: userId,
                         displayName: 'FPO Display Name ' + userId,
                         age: 27
-                    });
+                    }, 60000));
                 }
 
                 reject('Invalid user id');
-            }, 200);
+            }, 500);
         });
     }
 });
