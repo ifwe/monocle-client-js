@@ -97,19 +97,53 @@ describe('Memory Cache', function() {
             });
         });
 
-        it('removes least recently used entry if none have expired', function() {
-            this.cache.put('a', 1); // no expiration
-            this.cache.put('b', 2); // no expiration
-            this.cache.put('c', 3, 100); // newest entry, but expires soon
-            this.clock.tick(99);
+        it('removes least recently used entry', function() {
+            this.cache.put('a', 'test a'); // no expiration
+            this.cache.put('b', 'test b'); // no expiration
+            this.cache.put('c', 'test c'); // newest entry, but expires soon
+            expect(this.cache.printFromHead()).to.equal('c > b > a');
+            expect(this.cache.printFromTail()).to.equal('a < b < c');
 
-            // force a cached entry to drop, in this case, the entry `a` because none have expired
-            this.cache.put('d', 4);
+            this.cache.get('a'); // access to move it up the stack
+            expect(this.cache.printFromHead()).to.equal('a > c > b'); // `a` moves to the head
+            expect(this.cache.printFromTail()).to.equal('b < c < a');
 
-            expect(this.cache.get('a')).to.be.undefined; // removed because it was last to be accessed
-            expect(this.cache.get('b')).to.equal(2); // still good
-            expect(this.cache.get('c')).to.equal(3); // still good
-            expect(this.cache.get('d')).to.equal(4); // still good
+            this.cache.get('c'); // access to move it up the stack
+            expect(this.cache.printFromHead()).to.equal('c > a > b'); // `c` moves to the head
+            expect(this.cache.printFromTail()).to.equal('b < a < c');
+
+            // force a cached entry to drop, in this case, the entry `b` because it was last to be accessed
+            this.cache.put('d', 'test d');
+            expect(this.cache.printFromHead()).to.equal('d > c > a'); // `d` moves to the head, `b` gets dropped from tail
+            expect(this.cache.printFromTail()).to.equal('a < c < d');
+
+            expect(this.cache.get('a')).to.equal('test a'); // still good
+            expect(this.cache.get('b')).to.be.undefined; // removed because it wasn't accessed recently
+            expect(this.cache.get('c')).to.equal('test c'); // still good
+            expect(this.cache.get('d')).to.equal('test d'); // still good
+            expect(this.cache.get('e')).to.be.undefined; // doesn't exist yet
+
+            // push another item onto the cache, which drops 'a'
+            this.cache.put('e', 'test e');
+            expect(this.cache.printFromHead()).to.equal('e > d > c'); // `e` moves to the head, `a` dropped from tail
+            expect(this.cache.printFromTail()).to.equal('c < d < e');
+
+            expect(this.cache.get('a')).to.be.undefined; // dropped because it was last one to be accessed
+            expect(this.cache.get('b')).to.be.undefined; // removed previously
+            expect(this.cache.get('c')).to.equal('test c'); // still good
+            expect(this.cache.get('d')).to.equal('test d'); // still good
+            expect(this.cache.get('e')).to.equal('test e'); // still good
+
+            expect(this.cache.printFromHead()).to.equal('e > d > c');
+            expect(this.cache.printFromTail()).to.equal('c < d < e');
+
+            expect(this.cache.get('c')).to.equal('test c'); // moves tail item `c` to the head
+            expect(this.cache.printFromHead()).to.equal('c > e > d');
+            expect(this.cache.printFromTail()).to.equal('d < e < c');
+
+            expect(this.cache.get('c')).to.equal('test c'); // no change, `c` is already the head
+            expect(this.cache.printFromHead()).to.equal('c > e > d');
+            expect(this.cache.printFromTail()).to.equal('d < e < c');
         });
 
         it('removes expired entries before removing least recently used entry', function() {
