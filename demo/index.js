@@ -20,10 +20,12 @@ var api = new Monocle();
 
 api.route('/users/:userId', {
     type: 'object',
+    title: 'User',
+    description: 'A user of the website',
     properties: {
-        userId: { type: 'integer' },
-        displayName: { type: 'string' },
-        age: { type: 'integer' }
+        userId: { type: 'integer', description: 'The User ID', sample: 123 },
+        displayName: { type: 'string', description: 'User\'s preferred display name', sample: 'John Doe' },
+        age: { type: 'integer', description: 'User age in years', sample: 32 }
     }
 }, {
     // Complex resources may need multiple callback handlers to support different properties.
@@ -63,8 +65,8 @@ api.on('api:error', function(data) {
 
 // Create web server and listen on port 8080
 var http = require('http');
-http.createServer(app).listen(8080, function() {
-    console.log("API Router Demo listening on port 8080");
-    console.log("View documentation: http://localhost:8080/demo");
-    console.log("View Angular demo: http://localhost:8080/angular.html");
+http.createServer(app).listen(4000, function() {
+    console.log("API Router Demo listening on port 4000");
+    console.log("View documentation: http://localhost:4000/demo");
+    console.log("View Angular demo: http://localhost:4000/angular.html");
 });
