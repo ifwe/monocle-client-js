@@ -87,7 +87,9 @@
             <label><input type="checkbox" ng-model="demo.Users.properties.age">age</label>
         </div>
         <div>
-            <button type="submit">Fetch!</button>
+            <button type="submit">Fetch One</button>
+            <button type="button" ng-click="demo.batch()">Add to Batch</button>
+            <button type="button" ng-click="demo.fetchBatched()">Fetch Batched</button>
         </div>
     </form>
 
@@ -99,6 +101,11 @@
     <div class="user box" ng-if="demo.user">
         <h2>User</h2>
         <pre>{{ demo.user | json:2 }}</pre>
+    </div>
+
+    <div class="batched box" ng-if="demo.batched">
+        <h2>Batched</h2>
+        <pre>{{ demo.batched | json:2 }}</pre>
     </div>
 
     <div class="cached box">
@@ -160,6 +167,36 @@ app.service('Users', function(monocle) {
 app.controller('DemoCtrl', function(Users, $scope) {
     this.Users = Users;
     this.userId = 1;
+    this.toBatch = [];
+
+    this.batch = function() {
+        if (-1 === this.toBatch.indexOf(this.userId)) {
+            this.toBatch.push(this.userId);
+        }
+    };
+
+    this.clearBatch = function($event) {
+        $event.stopPropagation();
+        this.batched = [];
+    };
+
+    this.fetchBatched = function() {
+        this.fetching = true;
+        this.batched = [];
+        this.toBatch.forEach(function(id) {
+            Users.get(id)
+            .then(function(user) {
+                this.batched.push({ user: user });
+            }.bind(this))
+            .catch(function(error) {
+                this.batched.push({ error: error });
+            }.bind(this))
+            .finally(function() {
+                this.fetching = false;
+                this.cached = Users.cached;
+            }.bind(this));
+        }.bind(this));
+    };
 
     this.fetch = function() {
         this.error = null;

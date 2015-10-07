@@ -84,7 +84,7 @@ describe('Node HTTP Adapter', function() {
 
                 describe('headers', function() {
                     it('passes content-type header', function() {
-                        var expectedContentType = 'application/x-www-form-urlencoded; charset=UTF-8';
+                        var expectedContentType = 'application/json';
                         return this.adapter.request(method, this.path, this.options, this.body)
                         .then(function(result) {
                             this.request[methodAsync].calledOnce.should.be.true;

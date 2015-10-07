@@ -52,7 +52,7 @@ describe('Angular Adapter', function() {
                 it('sets content-type header', function() {
                     return this.adapter.request(method, '/foo')
                     .then(function(result) {
-                        var expectedContentType = 'application/x-www-form-urlencoded; charset=UTF-8';
+                        var expectedContentType = 'application/json';
                         this.$http.lastCall.args[0].headers.should.have.property('Content-Type', expectedContentType);
                     }.bind(this));
                 });
@@ -83,7 +83,7 @@ describe('Angular Adapter', function() {
 
                 describe('headers', function() {
                     it('passes content-type header', function() {
-                        var expectedContentType = 'application/x-www-form-urlencoded; charset=UTF-8';
+                        var expectedContentType = 'application/json';
                         return this.adapter.request(method, this.path, this.options, this.body)
                         .then(function(result) {
                             this.$http.calledOnce.should.be.true;
