@@ -45,7 +45,7 @@ describe('Resource Cache', function() {
             };
             expect(this.cache.get(resource.$id)).to.be.undefined;
             var cacheKey = this.cache.put(resource);
-            JSON.stringify(this.cache.get(cacheKey)).should.equal(JSON.stringify(resource));
+            this.cache.get(cacheKey).should.deep.equal(resource);
         });
 
         it('can remove a single entry', function() {
@@ -55,7 +55,7 @@ describe('Resource Cache', function() {
                 value: 'test'
             };
             var cacheKey = this.cache.put(resource);
-            JSON.stringify(this.cache.get(cacheKey)).should.equal(JSON.stringify(resource));
+            this.cache.get(cacheKey).should.deep.equal(resource);
             this.cache.remove(cacheKey);
             expect(this.cache.get(cacheKey)).to.be.undefined;
         });
@@ -110,9 +110,9 @@ describe('Resource Cache', function() {
                 value: 'test'
             };
             var cacheKey = this.cache.put(resource);
-            JSON.stringify(this.cache.get(cacheKey)).should.equal(JSON.stringify(resource));
+            this.cache.get(cacheKey).should.deep.equal(resource);
             this.clock.tick(100);
-            JSON.stringify(this.cache.get(cacheKey)).should.equal(JSON.stringify(resource));
+            this.cache.get(cacheKey).should.deep.equal(resource);
             this.clock.tick(1);
             expect(this.cache.get(cacheKey)).to.be.undefined;
         });
@@ -126,7 +126,7 @@ describe('Resource Cache', function() {
             true,
             false
         ].forEach(function(ttl) {
-            it('ignores invalid ttl ' + JSON.stringify(ttl), function() {
+            it('ignores invalid ttl ' + ttl, function() {
                 var resource = {
                     $id: 'test_key',
                     $expires: ttl,
@@ -134,9 +134,9 @@ describe('Resource Cache', function() {
                 };
 
                 var cacheKey = this.cache.put(resource);
-                expect(JSON.stringify(this.cache.get(cacheKey))).to.equal(JSON.stringify(resource));
+                this.cache.get(cacheKey).should.deep.equal(resource);
                 this.clock.tick(10000000);
-                expect(JSON.stringify(this.cache.get(cacheKey))).to.equal(JSON.stringify(resource));
+                this.cache.get(cacheKey).should.deep.equal(resource);
             });
         });
     });
@@ -170,7 +170,7 @@ describe('Resource Cache', function() {
             this.cache.removeMatchingTag('foo');
             expect(this.cache.get(cacheKey)).to.be.undefined;
             expect(this.cache.get(cacheKey2)).to.be.undefined;
-            expect(JSON.stringify(this.cache.get(cacheKey3))).to.equal(JSON.stringify(resource3));
+            this.cache.get(cacheKey3).should.deep.equal(resource3);
         });
     });
 
@@ -195,8 +195,8 @@ describe('Resource Cache', function() {
             };
 
             var cacheKey = this.cache.put(resource);
-            JSON.stringify(this.cache.get(cacheKey)).should.equal(JSON.stringify(resource));
-            JSON.stringify(this.cache.get('nested')).should.equal(JSON.stringify(nestedResource));
+            this.cache.get(cacheKey).should.deep.equal(resource);
+            this.cache.get('nested').should.deep.equal(nestedResource);
         });
 
         it('caches deeply nested resources', function() {
@@ -227,10 +227,10 @@ describe('Resource Cache', function() {
             };
 
             var cacheKey = this.cache.put(resource);
-            JSON.stringify(this.cache.get(cacheKey)).should.equal(JSON.stringify(resource));
-            JSON.stringify(this.cache.get('nested')).should.equal(JSON.stringify(nestedResource));
-            JSON.stringify(this.cache.get('deeply')).should.equal(JSON.stringify(deeplyNestedResource));
-            JSON.stringify(this.cache.get('3_1')).should.equal(JSON.stringify(nestedResource2));
+            this.cache.get(cacheKey).should.deep.equal(resource);
+            this.cache.get('nested').should.deep.equal(nestedResource);
+            this.cache.get('deeply').should.deep.equal(deeplyNestedResource);
+            this.cache.get('3_1').should.deep.equal(nestedResource2);
         });
 
         it('gets undefined for parent of expired deeply nested resource', function() {
@@ -253,27 +253,27 @@ describe('Resource Cache', function() {
 
             // Everything cached to start.
             var cacheKey = this.cache.put(resource);
-            JSON.stringify(this.cache.get(cacheKey)).should.equal(JSON.stringify(resource));
-            JSON.stringify(this.cache.get('nested')).should.equal(JSON.stringify(nestedResource));
-            JSON.stringify(this.cache.get('nested2')).should.equal(JSON.stringify(nestedResource2));
+            this.cache.get(cacheKey).should.deep.equal(resource);
+            this.cache.get('nested').should.deep.equal(nestedResource);
+            this.cache.get('nested2').should.deep.equal(nestedResource2);
 
             // Just before first nested resource expires, everything is cached.
             this.clock.tick(100);
-            JSON.stringify(this.cache.get(cacheKey)).should.equal(JSON.stringify(resource));
-            JSON.stringify(this.cache.get('nested')).should.equal(JSON.stringify(nestedResource));
-            JSON.stringify(this.cache.get('nested2')).should.equal(JSON.stringify(nestedResource2));
+            this.cache.get(cacheKey).should.deep.equal(resource);
+            this.cache.get('nested').should.deep.equal(nestedResource);
+            this.cache.get('nested2').should.deep.equal(nestedResource2);
 
             // First nested resource expired, root resource and first nested resource should not be in cache.
             this.clock.tick(1);
             expect(this.cache.get(cacheKey)).to.be.undefined;
             expect(this.cache.get('nested')).to.be.undefined;
-            JSON.stringify(this.cache.get('nested2')).should.equal(JSON.stringify(nestedResource2));
+            this.cache.get('nested2').should.deep.equal(nestedResource2);
 
             // Just before second nested resource expires, second nested resource should still be cached.
             this.clock.tick(99);
             expect(this.cache.get(cacheKey)).to.be.undefined;
             expect(this.cache.get('nested')).to.be.undefined;
-            JSON.stringify(this.cache.get('nested2')).should.equal(JSON.stringify(nestedResource2));
+            this.cache.get('nested2').should.deep.equal(nestedResource2);
 
             // Second nested resource expired, nothing should be in cache anymore.
             this.clock.tick(1);

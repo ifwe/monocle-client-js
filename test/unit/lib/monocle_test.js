@@ -104,7 +104,7 @@ describe('Monocle API Client', function() {
                 return this.api.get('/cacheable')
                 .then(function(result2) {
                     this.http.request.calledOnce.should.be.true;
-                    JSON.stringify(result1).should.equal(JSON.stringify(result2));
+                    result1.should.deep.equal(result2);
                 }.bind(this));
             }.bind(this));
         });
