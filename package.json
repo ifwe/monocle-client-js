@@ -1,6 +1,6 @@
 {
   "name": "monocle-client-js",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "JS client for Monocle APIs",
   "main": "lib/index.js",
   "scripts": {
@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "bluebird": "2.10.1",
+    "lodash": "^3.10.1",
     "monocle-api": "0.0.5",
     "request": "2.37.0"
   },
