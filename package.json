@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "bluebird": "2.10.1",
+    "clone": "1.0.2",
     "monocle-api": "0.0.5",
     "request": "2.37.0"
   },

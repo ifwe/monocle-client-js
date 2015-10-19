@@ -2,7 +2,8 @@
   "name": "monocle-client-js",
   "version": "0.0.3",
   "authors": [
-    "Hector Virgen <hvirgen@ifwe.co>"
+    "Hector Virgen <hvirgen@ifwe.co>",
+    "David Kaminsky <dkaminsky@ifwe.co>"
   ],
   "description": "Monocle API Client for Node and the Browser",
   "main": "monocle-client-angular.js",
