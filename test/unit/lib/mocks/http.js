@@ -42,6 +42,11 @@ HttpMock.prototype.mock = function(method, path, options) {
         optionsJson: JSON.stringify(options),
         resolvesWith: _resolve,
         rejectsWith: _reject,
+        resolvesWithDelay: function(delay, data) {
+            setTimeout(function() {
+                _resolve(data)
+            }, delay);
+        },
         promise: promise
     };
 
