@@ -3,3 +3,5 @@ docs
 test/coverage.html
 npm-debug.log
 .idea
+demo/public/monocle-client*.js
+demo/public/bluebird.js
