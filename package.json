@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "scripts": {
     "test": "grunt test",
-    "demo": "grunt build && cp monocle-client-angular.js demo/public && nodemon demo/index.js"
+    "demo": "grunt build && cp monocle-client-angular*.js demo/public && cp node_modules/bluebird/js/browser/bluebird.js demo/public && nodemon demo/index.js"
   },
   "repository": {
     "type": "git",
