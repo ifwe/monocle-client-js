@@ -65,6 +65,7 @@
 	    this._cache = new Store(new ResourceCache('monocle', { capacity: 100 }));
 	    this._batched = [];
 	    this._batchTimeout = null;
+	    this._queuedGets = {};
 	};
 
 	Monocle.prototype.setBase = function(base) {
@@ -127,10 +128,36 @@
 	    });
 	};
 
+	var getQueuedGetKey = function(path, options) {
+	    return [path, JSON.stringify(options)].join(':');
+	};
+
+	var getQueuedGet = function(path, options) {
+	    var key = getQueuedGetKey(path, options);
+	    if (this._queuedGets.hasOwnProperty(key)) {
+	        return this._queuedGets[key];
+	    }
+	    return null;
+	};
+
+	var enqueueGet = function(path, options, promise) {
+	    var key = getQueuedGetKey(path, options);
+	    this._queuedGets[key] = promise;
+	};
+
+	var clearQueuedGet = function(path, options) {
+	    var key = getQueuedGetKey(path, options);
+	    delete this._queuedGets[key];
+	};
+
 	var _handle = function(method, path, options) {
 	    switch (method) {
-	        // Check cache if attempting to get resource
 	        case 'get':
+	            // Check if this GET is already queued
+	            var queuedGet = getQueuedGet.call(this, path, options);
+	            if (queuedGet) return queuedGet;
+
+	            // Check cache if attempting to get resource
 	            var cached = this._cache.get(path);
 	            if (cached) {
 	                if (!options || !options.props) {
@@ -148,16 +175,16 @@
 	            }
 	            break;
 
-	        // Remove from cache when resource is being updated or removed
 	        case 'post':
 	        case 'put':
 	        case 'delete':
 	        case 'patch':
+	            // Remove from cache when resource is being updated or removed
 	            this._cache.remove(path);
 	            break;
 	    }
 
-	    return (new Promise(function(resolve, reject) {
+	    var promise = (new Promise(function(resolve, reject) {
 	        this._batched.push({
 	            method: method,
 	            url: path,
@@ -166,7 +193,15 @@
 	            reject: reject
 	        });
 	        updateBatchTimeout.call(this);
-	    }.bind(this))).then(cacheResource.bind(this, method));
+	    }.bind(this)))
+	    .then(cacheResource.bind(this, method))
+	    .finally(clearQueuedGet.bind(this, path, options));
+
+	    if (method === 'get') {
+	        enqueueGet.call(this, path, options, promise);
+	    }
+
+	    return promise;
 	};
 
 	var cacheResource = function(method, resource) {
@@ -2760,7 +2795,7 @@
 	        };
 
 	        this.$get = function($http, $q, $window) {
-	            var angularAdapter = new AngularAdapter($http, $q, $window);
+	            var angularAdapter = new AngularAdapter($http, $q);
 	            angularAdapter.setTimeout(this._timeout);
 	            angularAdapter.setHeaders(this._headers);
 
@@ -2777,7 +2812,7 @@
 	            return monocle;
 	        };
 
-	        this.$get.$provide = ['$http', '$q', '$window'];
+	        this.$get.$inject = ['$http', '$q'];
 	    });
 	};
 
@@ -2790,10 +2825,9 @@
 
 	'use strict';
 
-	function AngularAdapter($http, $q, $window) {
+	function AngularAdapter($http, $q) {
 	    this._$http = $http;
 	    this._$q = $q;
-	    this._$window = $window;
 	    this._timeout = 30000;
 	    this._headers = {
 	        'Content-Type': 'application/json',
