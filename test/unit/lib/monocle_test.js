@@ -228,4 +228,50 @@ describe('Monocle API Client', function() {
             });
         });
     });
+
+    describe('duplicate GETs', function() {
+        beforeEach(function() {
+            this.http.mock('GET', '/dupe').resolvesWithDelay(500, {
+                foo: 'test foo'
+            });
+        });
+
+        it('makes only one HTTP request', function() {
+            var promise1 = this.api.get('/dupe');
+            var promise2 = this.api.get('/dupe');
+            this.clock.tick(500);
+            return Promise.settle([
+                promise1,
+                promise2
+            ]).then(function(results) {
+                promise1.isFulfilled().should.be.true;
+                promise2.isFulfilled().should.be.true;
+                this.http.request.calledOnce.should.be.true;
+            }.bind(this));
+        });
+
+        it('makes a new HTTP request if previous one has been fulfilled', function() {
+            var promise1 = this.api.get('/dupe');
+            var promise2 = this.api.get('/dupe');
+            this.clock.tick(500);
+
+            return Promise.settle([
+                promise1,
+                promise2
+            ]).then(function(results) {
+                var promise3 = this.api.get('/dupe');
+                var promise4 = this.api.get('/dupe');
+                this.clock.tick(500);
+
+                return Promise.settle([
+                    promise1,
+                    promise2
+                ]).then(function(results) {
+                    promise3.isFulfilled().should.be.true;
+                    promise4.isFulfilled().should.be.true;
+                    this.http.request.calledTwice.should.be.true;
+                }.bind(this));
+            }.bind(this));
+        });
+    });
 });
