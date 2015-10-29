@@ -145,7 +145,7 @@ describe('Monocle API Client', function() {
         beforeEach(function() {
             this.http.mock('POST', '/_batch', {
                 body: [
-                    { method: 'get', 'url': '/foo' },
+                    { method: 'get', 'url': '/foo?props=foo%2Cbar', options: { props: ['foo', 'bar'] } },
                     { method: 'get', 'url': '/bar' }
                 ]
             }).resolvesWith([
@@ -177,7 +177,7 @@ describe('Monocle API Client', function() {
         });
 
         it('batches into a single request', function() {
-            var promise1 = this.api.get('/foo');
+            var promise1 = this.api.get('/foo', { props: ['foo', 'bar' ]});
             var promise2 = this.api.get('/bar');
             this.clock.tick();
             return Promise.all([
@@ -188,8 +188,27 @@ describe('Monocle API Client', function() {
             }.bind(this));
         });
 
+        it('wraps each call in an envelope', function() {
+            var promise1 = this.api.get('/foo', { props: ['foo', 'bar' ]});
+            var promise2 = this.api.get('/bar');
+            this.clock.tick();
+            return Promise.all([
+                promise1,
+                promise2
+            ]).then(function(results) {
+                var body = this.http.request.lastCall.args[2].body;
+                body.should.be.an('array');
+                body.should.have.lengthOf(2);
+                body[0].should.be.an('object');
+                body[0].should.contain({
+                    method: 'get',
+                    url: '/foo?props=foo%2Cbar'
+                });
+            }.bind(this));
+        });
+
         it('resolves each promise independently', function() {
-            var promise1 = this.api.get('/foo');
+            var promise1 = this.api.get('/foo', { props: ['foo', 'bar' ]});
             var promise2 = this.api.get('/bar');
             this.clock.tick();
             return Promise.all([
