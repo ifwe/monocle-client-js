@@ -15,7 +15,7 @@ HttpMock.prototype.request = function(method, path, options) {
         var isMatch = (
             method === mock.method
             && pathBase === mock.path
-            && optionsJson === mock.optionsJson
+            && ((optionsJson === mock.optionsJson) || typeof options === 'undefined')
         );
 
         if (isMatch) {
