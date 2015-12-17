@@ -53,6 +53,30 @@ describe('Monocle API Client', function() {
                     this.http.request.calledWith(method.toUpperCase(), '/foo?props=alpha%2Cbeta%2Cgamma').should.be.true;
                 });
 
+                it('appends query object to query string with no props', function() {
+                    this.http.mock(method, '/foo', {
+                        query: {offset: 1, limit: 3},
+                    });
+                    this.api[method]('/foo', {
+                        query: {offset: 1, limit: 3}
+                    });
+                    this.clock.tick();
+                    this.http.request.calledWith(method.toUpperCase(), '/foo?offset=1&limit=3').should.be.true;
+                });
+
+                it('appends query object to query string with props', function() {
+                    this.http.mock(method, '/foo', {
+                        query: {offset: 1, limit: 3},
+                        props: ['alpha', 'beta', 'gamma']
+                    });
+                    this.api[method]('/foo', {
+                        query: {offset: 1, limit: 3},
+                        props: ['alpha', 'beta', 'gamma']
+                    });
+                    this.clock.tick();
+                    this.http.request.calledWith(method.toUpperCase(), '/foo?offset=1&limit=3&props=alpha%2Cbeta%2Cgamma').should.be.true;
+                });
+
                 it('resolves with value from successful HTTP call', function() {
                     this.http.mock(method, '/foo').resolvesWith({ foo: 'test foo' });
 
