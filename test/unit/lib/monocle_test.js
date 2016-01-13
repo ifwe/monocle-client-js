@@ -115,6 +115,34 @@ describe('Monocle API Client', function() {
                 $id: '/cacheable'
             });
 
+            this.complexCacheable = {
+                name: 'Joe',
+                photo: { url: 'joe.jpg' },
+                children: [
+                    {
+                        name: 'Jane',
+                        photo: { url: 'jane.jpg' },
+                        children: [
+                            { name: 'Bobby', photo: { url: 'bobby.jpg' }, children: [] },
+                            { name: 'Timmy', photo: { url: 'timmy.jpg' }, children: [] },
+                            { name: 'Sally', photo: { url: 'sally.jpg' }, children: [] },
+                        ]
+                    },
+                    {
+                        name: 'Fred',
+                        photo: { url: 'fred.jpg' },
+                        children: [
+                            { name: 'Alice', photo: { url: 'Alice.jpg' }, children: [] },
+                            { name: 'Megatron', photo: { url: 'megatron.png' }, children: [] },
+                            { name: 'Daria', photo: { url: 'daria.jpg' }, children: [] },
+                        ]
+                    }
+                ],
+                $expires: 5000,
+                $id: '/complex-cacheable'
+            };
+            this.http.mock('GET', '/complex-cacheable').resolvesWith(this.complexCacheable);
+
             this.http.mock('GET', '/uncacheable').resolvesWith({
                 foo: 'test uncacheable'
             });
@@ -131,6 +159,75 @@ describe('Monocle API Client', function() {
                     result1.should.deep.equal(result2);
                 }.bind(this));
             }.bind(this));
+        });
+
+        it('returns cached value if resource is cacheable, within time limit, and requested properties exist in the cache', function() {
+            var promise = this.api.get('/cacheable');
+            this.clock.tick();
+
+            return promise.then(function(result1) {
+                return this.api.get('/cacheable', {
+                    props: ['foo']
+                })
+                .then(function(result2) {
+                    this.http.request.calledOnce.should.be.true;
+                    result1.should.deep.equal(result2);
+                }.bind(this));
+            }.bind(this));
+        });
+
+        [
+            ['name'],
+            ['photo.url'],
+            ['children@name'],
+            ['children@photo.url'],
+            ['children@children@name']
+        ].forEach(function(props) {
+            it('returns cached value if resource is cacheable, within time limit, and contains requested properties ' + props.join(','), function() {
+                // Get the whole object
+                var promise = this.api.get('/complex-cacheable');
+                this.clock.tick();
+
+                return promise.then(function(result1) {
+                    return this.api.get('/complex-cacheable', {
+                        props: props
+                    })
+                    .then(function(result2) {
+                        this.http.request.calledOnce.should.be.true;
+                        result1.should.deep.equal(result2);
+                    }.bind(this));
+                }.bind(this));
+            });
+        });
+
+        [
+            ['age'],
+            ['photo.timestamp'],
+            ['children@age'],
+            ['children@photo.caption'],
+            ['children@children@age'],
+            ['name', 'photo.url', 'children@name', 'children@photo.url', 'children@children@name', 'children@children@age']
+        ].forEach(function(props) {
+            it('makes new http request if cached resource does not contain requested prop(s) ' + props.join(','), function() {
+                this.http.mock('GET', '/complex-cacheable', {
+                    props: props
+                }).resolvesWith(this.complexCacheable);
+
+                // Get the whole object
+                var promise = this.api.get('/complex-cacheable');
+                this.clock.tick();
+
+                return promise.then(function(result1) {
+                    var promise2 = this.api.get('/complex-cacheable', {
+                        props: props
+                    });
+                    this.clock.tick();
+                    return promise2;
+                }.bind(this))
+                .then(function(result2) {
+                    this.http.request.calledTwice.should.be.true;
+                }.bind(this));
+            });
         });
 
         it('makes new http request if cached resource is expired', function() {

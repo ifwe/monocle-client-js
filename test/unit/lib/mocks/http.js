@@ -9,8 +9,8 @@ HttpMock.prototype.request = function(method, path, options) {
     var pathBase = path.replace(/\?.*/g, '');
 
     // Resolve if preconfigured
-    for (var i = 0, len = this._mocks.length; i < len; i++) {
-        var mock = this._mocks[i];
+    for (var i = 0, len = this._mocks.length, mock; i < len; i++) {
+        mock = this._mocks[i];
 
         var isMatch = (
             method === mock.method
