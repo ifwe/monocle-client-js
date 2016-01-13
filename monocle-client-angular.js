@@ -219,7 +219,7 @@
 	 * @param object options - Request options
 	 * @return boolean
 	 */
-	var isResourceComplete = function(resource, props) {
+	function isResourceComplete(resource, props) {
 	    if (!props) {
 	        return true;
 	    }
@@ -246,7 +246,7 @@
 	 * @param string prop - The property path to verify
 	 * @return boolean
 	 */
-	var hasProp = function(resource, prop) {
+	function hasProp(resource, prop) {
 	    if (!prop) {
 	        return true;
 	    }
@@ -320,14 +320,14 @@
 	    return true;
 	};
 
-	var cacheResource = function(method, resource) {
+	function cacheResource(method, resource) {
 	    if ('get' === method) {
 	        this._cache.put(resource);
 	    }
 	    return resource;
 	};
 
-	var buildFullPath = function(base, path) {
+	function buildFullPath(base, path) {
 	    return (base + path).replace(/\/{2,}/g, '/');
 	};
 
