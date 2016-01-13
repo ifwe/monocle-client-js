@@ -26,8 +26,9 @@
   "dependencies": {
     "bluebird": "2.10.1",
     "clone": "1.0.2",
-    "monocle-api": "0.1.8",
-    "request": "2.37.0"
+    "monocle-api": "0.2.1",
+    "request": "2.37.0",
+    "tiny-sha256": "1.0.2"
   },
   "homepage": "https://github.com/ifwe/monocle-client-js",
   "devDependencies": {

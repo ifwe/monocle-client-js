@@ -1,5 +1,8 @@
 var Promise = require('bluebird');
 var Monocle = require('monocle-api');
+var Resource = Monocle.Resource;
+var Symlink = Monocle.Symlink;
+var Collection = Monocle.Collection;
 
 /*** Set up simple HTTP server ***/
 
@@ -18,7 +21,7 @@ app.use(bodyParser.json());
 
 var api = new Monocle();
 
-api.route('/users/:userId', {
+var userSchema = {
     type: 'object',
     title: 'User',
     description: 'A user of the website',
@@ -27,16 +30,18 @@ api.route('/users/:userId', {
         displayName: { type: 'string', description: 'User\'s preferred display name', sample: 'John Doe' },
         age: { type: 'integer', description: 'User age in years', sample: 32 }
     }
-}, {
+};
+
+api.route('/users/:userId', userSchema, {
     // Complex resources may need multiple callback handlers to support different properties.
     // The API router will figure out which callbacks are necessary to satisfy the incoming request.
     get: function(req) {
         return new Promise(function(resolve, reject) {
             setTimeout(function() {
                 var userId = req.getParam('userId');
-                if (userId > 0 && userId < 100) {
+                if (userId > 0 && userId <= 100) {
                     // within range of acceptible user ids
-                    return resolve(new Monocle.Resource('/users/' + userId, {
+                    return resolve(new Resource('/users/' + userId, {
                         userId: userId,
                         displayName: 'FPO Display Name ' + userId,
                         age: 27
@@ -46,6 +51,30 @@ api.route('/users/:userId', {
                 reject('Invalid user id');
             }, 500);
         });
+    }
+});
+
+api.route('/users', {
+    type: 'object',
+    title: 'Users',
+    properties: {
+        items: {
+            type: 'array',
+            items: userSchema
+        }
+    }
+}, {
+    get: function(request) {
+        users = [];
+        var offset = parseInt(request.getQuery('offset')) || 0;
+        var limit = parseInt(request.getQuery('limit')) || 10;
+
+        for (var userId = offset + 1; userId <= offset + limit; userId++) {
+            if (userId > 0 && userId <= 100) {
+                users.push(new Symlink('/users/' + userId));
+            }
+        }
+        return new Collection('/users', users, 10000);
     }
 });
 

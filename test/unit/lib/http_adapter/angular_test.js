@@ -84,7 +84,7 @@ describe('Angular Adapter', function() {
                 describe('headers', function() {
                     it('passes content-type header', function() {
                         var expectedContentType = 'application/json';
-                        return this.adapter.request(method, this.path, this.options, this.body)
+                        return this.adapter.request(method, this.path, this.options)
                         .then(function(result) {
                             this.$http.calledOnce.should.be.true;
                             this.$http.lastCall.args[0].should.have.property('headers');
@@ -94,7 +94,7 @@ describe('Angular Adapter', function() {
 
                     it('supports custom header', function() {
                         this.adapter.setHeader('x-custom-test', 'test value');
-                        return this.adapter.request(method, this.path, this.options, this.body)
+                        return this.adapter.request(method, this.path, this.options)
                         .then(function(result) {
                             this.$http.calledOnce.should.be.true;
                             this.$http.lastCall.args[0].should.have.property('headers');
@@ -108,7 +108,7 @@ describe('Angular Adapter', function() {
                             'x-custom-test-2': 'test value 2',
                             'x-custom-test-3': 'test value 3'
                         });
-                        return this.adapter.request(method, this.path, this.options, this.body)
+                        return this.adapter.request(method, this.path, this.options)
                         .then(function(result) {
                             this.$http.calledOnce.should.be.true;
                             this.$http.lastCall.args[0].should.have.property('headers');
@@ -122,7 +122,7 @@ describe('Angular Adapter', function() {
                         this.adapter.setHeader('x-custom-callback', function() {
                             return 'test value';
                         });
-                        return this.adapter.request(method, this.path, this.options, this.body)
+                        return this.adapter.request(method, this.path, this.options)
                         .then(function(result) {
                             this.$http.calledOnce.should.be.true;
                             this.$http.lastCall.args[0].should.have.property('headers');
@@ -132,7 +132,7 @@ describe('Angular Adapter', function() {
 
                     it('supports promise to generate header value', function() {
                         this.adapter.setHeader('x-custom-promise', Promise.resolve('test value'));
-                        return this.adapter.request(method, this.path, this.options, this.body)
+                        return this.adapter.request(method, this.path, this.options)
                         .then(function(result) {
                             this.$http.calledOnce.should.be.true;
                             this.$http.lastCall.args[0].should.have.property('headers');
@@ -144,7 +144,7 @@ describe('Angular Adapter', function() {
                         this.adapter.setHeader('x-custom-callback-promise', function() {
                             return Promise.resolve('test value');
                         });
-                        return this.adapter.request(method, this.path, this.options, this.body)
+                        return this.adapter.request(method, this.path, this.options)
                         .then(function(result) {
                             this.$http.calledOnce.should.be.true;
                             this.$http.lastCall.args[0].should.have.property('headers');
@@ -153,6 +153,40 @@ describe('Angular Adapter', function() {
                     });
                 });
 
+                describe('custom header', function() {
+                    it('is included in HTTP request', function() {
+                        this.headers = {'x-custom-for-call': 'test custom'};
+                        return this.adapter.request(method, this.path, this.options, this.headers)
+                        .then(function(result) {
+                            this.$http.calledOnce.should.be.true;
+                            this.$http.lastCall.args[0].should.have.property('headers');
+                            this.$http.lastCall.args[0].headers.should.have.property('x-custom-for-call', 'test custom');
+                        }.bind(this));
+                    });
+
+                    it('merges with global custom headers', function() {
+                        this.adapter.setHeader('x-custom-test-1', 'test value 1');
+                        this.headers = {'x-custom-test-2': 'test value 2'};
+                        return this.adapter.request(method, this.path, this.options, this.headers)
+                        .then(function(result) {
+                            this.$http.calledOnce.should.be.true;
+                            this.$http.lastCall.args[0].should.have.property('headers');
+                            this.$http.lastCall.args[0].headers.should.have.property('x-custom-test-1', 'test value 1');
+                            this.$http.lastCall.args[0].headers.should.have.property('x-custom-test-2', 'test value 2');
+                        }.bind(this));
+                    });
+
+                    it('overrides global custom headers', function() {
+                        this.adapter.setHeader('x-custom-test', 'test value');
+                        this.headers = {'x-custom-test': 'test value override'};
+                        return this.adapter.request(method, this.path, this.options, this.headers)
+                        .then(function(result) {
+                            this.$http.calledOnce.should.be.true;
+                            this.$http.lastCall.args[0].should.have.property('headers');
+                            this.$http.lastCall.args[0].headers.should.have.property('x-custom-test', 'test value override');
+                        }.bind(this));
+                    });
+                });
             });
         });
     });

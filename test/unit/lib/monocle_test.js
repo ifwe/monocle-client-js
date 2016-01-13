@@ -260,14 +260,149 @@ describe('Monocle API Client', function() {
                 }.bind(this));
             }.bind(this));
         });
+
+        describe('collections', function() {
+            beforeEach(function() {
+                // First GET
+                this.http.mock('GET', '/collection').resolvesWith({
+                    items: [
+                        { $id: '/collection/1', foo: 'test foo 1' },
+                        { $id: '/collection/2', foo: 'test foo 2' },
+                        { $id: '/collection/3', foo: 'test foo 3' }
+                    ],
+                    $type: 'collection',
+                    $etag: 'W/"17f4d23c4678a6eba466f8ab7d1401ac8b8b0f89c04f7f0f836552f073728726"',
+                    $expires: 5000,
+                    $id: '/collection'
+                });
+            });
+
+            it('passes etag on 2nd request to validate cached collection', function() {
+                var promise1 = this.api.get('/collection');
+                this.clock.tick();
+
+                return promise1.then(function(result1) {
+                    // Second GET
+                    this.http.mock('GET', '/collection', {/* options */}, {
+                        'if-none-match': 'W/"17f4d23c4678a6eba466f8ab7d1401ac8b8b0f89c04f7f0f836552f073728726"'
+                    }).resolvesWith({
+                        $httpStatus: 304
+                    });
+
+                    var promise2 = this.api.get('/collection');
+                    this.clock.tick();
+
+                    return promise2.then(function(result2) {
+                        this.http.request.calledTwice.should.be.true;
+                    }.bind(this));
+                }.bind(this));
+            });
+
+            it('resolves with cached copy if etag validates', function() {
+                var promise1 = this.api.get('/collection');
+                this.clock.tick();
+
+                return promise1.then(function(result1) {
+                    // Second GET
+                    this.http.mock('GET', '/collection', {/* options */}, {
+                        'if-none-match': 'W/"17f4d23c4678a6eba466f8ab7d1401ac8b8b0f89c04f7f0f836552f073728726"'
+                    }).rejectsWith({
+                        $httpStatus: 304
+                    });
+
+                    var promise2 = this.api.get('/collection');
+                    this.clock.tick();
+
+                    return promise2.then(function(result2) {
+                        result2.items.should.deep.equal(result1.items);
+                    }.bind(this));
+                }.bind(this));
+            });
+
+            it('resolves with updated object if cached', function() {
+                var promise1 = this.api.get('/collection');
+                this.clock.tick();
+
+                return promise1.then(function(result1) {
+                    // Second GET
+                    this.http.mock('GET', '/collection', {/* options */}, {
+                        'if-none-match': 'W/"17f4d23c4678a6eba466f8ab7d1401ac8b8b0f89c04f7f0f836552f073728726"'
+                    }).resolvesWith({
+                        $httpStatus: 200,
+                        items: [
+                            { $id: '/collection/4', foo: 'test foo 4' },
+                            { $id: '/collection/5', foo: 'test foo 5' },
+                            { $id: '/collection/6', foo: 'test foo 6' }
+                        ],
+                        $type: 'collection',
+                        $etag: 'W/"updated"',
+                        $expires: 5000,
+                        $id: '/collection'
+                    });
+
+                    var promise2 = this.api.get('/collection');
+                    this.clock.tick();
+
+                    promise2.then(function(result2) {
+                        result2.should.not.deep.equal(result1);
+                        result2.should.have.property('items');
+                        result2.items[0].should.have.property('$id', '/collection/4');
+                        result2.items[1].should.have.property('$id', '/collection/5');
+                        result2.items[2].should.have.property('$id', '/collection/6');
+                    }.bind(this));
+                }.bind(this));
+            });
+
+            it('is supported when batching', function() {
+                var promise1 = this.api.get('/collection');
+                this.clock.tick();
+
+                return promise1.then(function(result1) {
+                    // Second GET
+                    this.http.mock('POST', '/_batch', {
+                        body: [
+                            { method: 'get', 'url': '/collection', 'headers': { 'if-none-match': 'W/"17f4d23c4678a6eba466f8ab7d1401ac8b8b0f89c04f7f0f836552f073728726"' }, options: {} },
+                            { method: 'get', 'url': '/anything', 'headers': {}, options: {} },
+                        ]
+                    }).resolvesWith([
+                        {
+                            status: 304,
+                            body: {
+                                $httpStatus: 304
+                            }
+                        },
+                        {
+                            status: 200,
+                            body: {
+                                foo: 'anything'
+                            }
+                        }
+                    ]);
+
+                    var promise2 = this.api.get('/collection');
+
+                    // Throw in a second GET to force it to batch
+                    this.api.get('/anything');
+
+                    this.clock.tick();
+
+                    return promise2.then(function(result2) {
+                        result2.should.have.property('items');
+                        result2.items[0].should.have.property('$id', '/collection/1');
+                        result2.items[1].should.have.property('$id', '/collection/2');
+                        result2.items[2].should.have.property('$id', '/collection/3');
+                    }.bind(this));
+                }.bind(this));
+            });
+        });
     });
 
     describe('multiple calls', function() {
         beforeEach(function() {
             this.http.mock('POST', '/_batch', {
                 body: [
-                    { method: 'get', 'url': '/foo?props=foo%2Cbar', options: { props: ['foo', 'bar'] } },
-                    { method: 'get', 'url': '/bar' }
+                    { method: 'get', 'url': '/foo?props=foo%2Cbar', 'headers': {}, options: { props: ['foo', 'bar'] } },
+                    { method: 'get', 'url': '/bar', 'headers': {}, options: {} }
                 ]
             }).resolvesWith([
                 {
@@ -282,8 +417,8 @@ describe('Monocle API Client', function() {
 
             this.http.mock('POST', '/_batch', {
                 body: [
-                    { method: 'get', 'url': '/resolved' },
-                    { method: 'get', 'url': '/rejected' }
+                    { method: 'get', 'url': '/resolved', 'headers': {}, options: {} },
+                    { method: 'get', 'url': '/rejected', 'headers': {}, options: {} }
                 ]
             }).resolvesWith([
                 {

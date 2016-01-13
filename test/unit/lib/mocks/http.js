@@ -4,8 +4,9 @@ var HttpMock = function() {
     this._mocks = [];
 };
 
-HttpMock.prototype.request = function(method, path, options) {
-    var optionsJson = JSON.stringify(options);
+HttpMock.prototype.request = function(method, path, options, headers) {
+    var optionsJson = JSON.stringify(options || {});
+    var headersJson = JSON.stringify(headers || {});
     var pathBase = path.replace(/\?.*/g, '');
 
     // Resolve if preconfigured
@@ -15,7 +16,8 @@ HttpMock.prototype.request = function(method, path, options) {
         var isMatch = (
             method === mock.method
             && pathBase === mock.path
-            && ((optionsJson === mock.optionsJson) || typeof options === 'undefined')
+            && optionsJson === mock.optionsJson
+            && headersJson === mock.headersJson
         );
 
         if (isMatch) {
@@ -23,10 +25,10 @@ HttpMock.prototype.request = function(method, path, options) {
         }
     }
 
-    return Promise.reject("Unexpected HTTP " + method + " request for path " + path + " with options " + optionsJson);
+    return Promise.reject("Unexpected HTTP " + method + " request for path " + path + " with options " + optionsJson + " and headers " + headersJson);
 };
 
-HttpMock.prototype.mock = function(method, path, options) {
+HttpMock.prototype.mock = function(method, path, options, headers) {
     var _resolve, _reject;
     method = method.toUpperCase();
 
@@ -38,8 +40,10 @@ HttpMock.prototype.mock = function(method, path, options) {
     var mock = {
         method: method,
         path: path,
-        options: options,
-        optionsJson: JSON.stringify(options),
+        options: options || {},
+        optionsJson: JSON.stringify(options || {}),
+        headers: headers || {},
+        headersJson: JSON.stringify(headers || {}),
         resolvesWith: _resolve,
         rejectsWith: _reject,
         resolvesWithDelay: function(delay, data) {
