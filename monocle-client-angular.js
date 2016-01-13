@@ -172,26 +172,8 @@
 
 	            // Check cache if attempting to get resource
 	            var cached = this._cache.get(path);
-	            if (cached) {
-	                if (!options || (!options.props && !options.query)) {
-	                    return Promise.resolve(cached);
-	                }
-	                var found = true;
-	                for (var i in options.props) {
-	                    if (!cached.hasOwnProperty(options.props[i])) {
-	                        this._cache.remove(path);
-	                        found = false;
-	                        break;
-	                    }
-	                }
-	                for (var i in options.query) {
-	                    if (!cached.hasOwnProperty(options.query[i])) {
-	                        this._cache.remove(path);
-	                        found = false;
-	                        break;
-	                    }
-	                }
-	                if (found) return Promise.resolve(cached);
+	            if (cached && isResourceComplete(cached, options && options.props)) {
+	                return Promise.resolve(cached);
 	            }
 	            break;
 
@@ -230,14 +212,122 @@
 	    return promise;
 	};
 
-	var cacheResource = function(method, resource) {
+	/**
+	 * Returns true if the provided resource fullfills all of the requirements of the options.
+	 *
+	 * @param object resource - The resource to check
+	 * @param object options - Request options
+	 * @return boolean
+	 */
+	function isResourceComplete(resource, props) {
+	    if (!props) {
+	        return true;
+	    }
+
+	    for (var i in props) {
+	        if (!props.hasOwnProperty(i)) {
+	            continue;
+	        }
+
+	        if (!hasProp(resource, props[i])) {
+	            return false;
+	        }
+	    }
+
+	    return true;
+	};
+
+	/**
+	 * Returns true if the resource contains the specified property according to its path.
+	 * a.b => reach into object `a` to look for `b` property
+	 * a@b => reach into array `a` to look for `b` properties on each item
+	 *
+	 * @param object resource - The object to check
+	 * @param string prop - The property path to verify
+	 * @return boolean
+	 */
+	function hasProp(resource, prop) {
+	    if (!prop) {
+	        return true;
+	    }
+
+
+	    var paths = [];
+	    var currentPath = {
+	        type: 'object',
+	        property: ''
+	    };
+	    paths.push(currentPath);
+
+	    for (var i = 0, len = prop.length; i < len; i++) {
+	        var char = prop[i];
+
+	        switch (char) {
+	            case '.':
+	                currentPath = {
+	                    type: 'object',
+	                    property: ''
+	                };
+	                paths.push(currentPath);
+	                break;
+
+	            case '@':
+	                currentPath = {
+	                    type: 'array',
+	                    property: ''
+	                };
+	                paths.push(currentPath);
+	                break;
+
+	            default:
+	                currentPath.property += char;
+	        }
+	    }
+
+	    // Walk the path to see if the properties exist
+	    var currentObject = resource;
+
+	    for (var i = 0, len = paths.length, path; i < len; i++) {
+	        if (null === currentObject) {
+	            // Trying to fetch a nested property from a top-level object that doesn't exist.
+	            return false;
+	        }
+
+	        path = paths[i];
+
+	        switch (path.type) {
+	            case 'object':
+	                if (!currentObject.hasOwnProperty(path.property)) {
+	                    return false;
+	                }
+	                currentObject = currentObject[path.property];
+	                break;
+
+	            case 'array':
+	                if (!currentObject.length) {
+	                    currentObject = null;
+	                    break;
+	                }
+	                // Only check the first object
+	                if (!currentObject[0].hasOwnProperty(path.property)) {
+	                    return false;
+	                }
+	                currentObject = currentObject[0][path.property];
+	                break;
+	        }
+	    }
+
+	    return true;
+	};
+
+	function cacheResource(method, resource) {
 	    if ('get' === method) {
 	        this._cache.put(resource);
 	    }
 	    return resource;
 	};
 
-	var buildFullPath = function(base, path) {
+	function buildFullPath(base, path) {
 	    return (base + path).replace(/\/{2,}/g, '/');
 	};
 
@@ -634,22 +724,20 @@
 	 */
 	Buffer.TYPED_ARRAY_SUPPORT = global.TYPED_ARRAY_SUPPORT !== undefined
 	  ? global.TYPED_ARRAY_SUPPORT
-	  : typedArraySupport()
-
-	function typedArraySupport () {
-	  function Bar () {}
-	  try {
-	    var arr = new Uint8Array(1)
-	    arr.foo = function () { return 42 }
-	    arr.constructor = Bar
-	    return arr.foo() === 42 && // typed array instances can be augmented
-	        arr.constructor === Bar && // constructor can be set
-	        typeof arr.subarray === 'function' && // chrome 9-10 lack `subarray`
-	        arr.subarray(1, 1).byteLength === 0 // ie10 has broken `subarray`
-	  } catch (e) {
-	    return false
-	  }
-	}
+	  : (function () {
+	      function Bar () {}
+	      try {
+	        var arr = new Uint8Array(1)
+	        arr.foo = function () { return 42 }
+	        arr.constructor = Bar
+	        return arr.foo() === 42 && // typed array instances can be augmented
+	            arr.constructor === Bar && // constructor can be set
+	            typeof arr.subarray === 'function' && // chrome 9-10 lack `subarray`
+	            arr.subarray(1, 1).byteLength === 0 // ie10 has broken `subarray`
+	      } catch (e) {
+	        return false
+	      }
+	    })()
 
 	function kMaxLength () {
 	  return Buffer.TYPED_ARRAY_SUPPORT
@@ -1603,7 +1691,7 @@
 	  offset = offset | 0
 	  if (!noAssert) checkInt(this, value, offset, 1, 0xff, 0)
 	  if (!Buffer.TYPED_ARRAY_SUPPORT) value = Math.floor(value)
-	  this[offset] = (value & 0xff)
+	  this[offset] = value
 	  return offset + 1
 	}
 
@@ -1620,7 +1708,7 @@
 	  offset = offset | 0
 	  if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0)
 	  if (Buffer.TYPED_ARRAY_SUPPORT) {
-	    this[offset] = (value & 0xff)
+	    this[offset] = value
 	    this[offset + 1] = (value >>> 8)
 	  } else {
 	    objectWriteUInt16(this, value, offset, true)
@@ -1634,7 +1722,7 @@
 	  if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0)
 	  if (Buffer.TYPED_ARRAY_SUPPORT) {
 	    this[offset] = (value >>> 8)
-	    this[offset + 1] = (value & 0xff)
+	    this[offset + 1] = value
 	  } else {
 	    objectWriteUInt16(this, value, offset, false)
 	  }
@@ -1656,7 +1744,7 @@
 	    this[offset + 3] = (value >>> 24)
 	    this[offset + 2] = (value >>> 16)
 	    this[offset + 1] = (value >>> 8)
-	    this[offset] = (value & 0xff)
+	    this[offset] = value
 	  } else {
 	    objectWriteUInt32(this, value, offset, true)
 	  }
@@ -1671,7 +1759,7 @@
 	    this[offset] = (value >>> 24)
 	    this[offset + 1] = (value >>> 16)
 	    this[offset + 2] = (value >>> 8)
-	    this[offset + 3] = (value & 0xff)
+	    this[offset + 3] = value
 	  } else {
 	    objectWriteUInt32(this, value, offset, false)
 	  }
@@ -1724,7 +1812,7 @@
 	  if (!noAssert) checkInt(this, value, offset, 1, 0x7f, -0x80)
 	  if (!Buffer.TYPED_ARRAY_SUPPORT) value = Math.floor(value)
 	  if (value < 0) value = 0xff + value + 1
-	  this[offset] = (value & 0xff)
+	  this[offset] = value
 	  return offset + 1
 	}
 
@@ -1733,7 +1821,7 @@
 	  offset = offset | 0
 	  if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000)
 	  if (Buffer.TYPED_ARRAY_SUPPORT) {
-	    this[offset] = (value & 0xff)
+	    this[offset] = value
 	    this[offset + 1] = (value >>> 8)
 	  } else {
 	    objectWriteUInt16(this, value, offset, true)
@@ -1747,7 +1835,7 @@
 	  if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000)
 	  if (Buffer.TYPED_ARRAY_SUPPORT) {
 	    this[offset] = (value >>> 8)
-	    this[offset + 1] = (value & 0xff)
+	    this[offset + 1] = value
 	  } else {
 	    objectWriteUInt16(this, value, offset, false)
 	  }
@@ -1759,7 +1847,7 @@
 	  offset = offset | 0
 	  if (!noAssert) checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000)
 	  if (Buffer.TYPED_ARRAY_SUPPORT) {
-	    this[offset] = (value & 0xff)
+	    this[offset] = value
 	    this[offset + 1] = (value >>> 8)
 	    this[offset + 2] = (value >>> 16)
 	    this[offset + 3] = (value >>> 24)
@@ -1778,7 +1866,7 @@
 	    this[offset] = (value >>> 24)
 	    this[offset + 1] = (value >>> 16)
 	    this[offset + 2] = (value >>> 8)
-	    this[offset + 3] = (value & 0xff)
+	    this[offset + 3] = value
 	  } else {
 	    objectWriteUInt32(this, value, offset, false)
 	  }
@@ -2053,7 +2141,7 @@
 	      }
 
 	      // valid surrogate pair
-	      codePoint = (leadSurrogate - 0xD800 << 10 | codePoint - 0xDC00) + 0x10000
+	      codePoint = leadSurrogate - 0xD800 << 10 | codePoint - 0xDC00 | 0x10000
 	    } else if (leadSurrogate) {
 	      // valid bmp char, but last char was a lead
 	      if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
@@ -2357,10 +2445,38 @@
 /* 8 */
 /***/ function(module, exports) {
 
-	var toString = {}.toString;
+	
+	/**
+	 * isArray
+	 */
 
-	module.exports = Array.isArray || function (arr) {
-	  return toString.call(arr) == '[object Array]';
+	var isArray = Array.isArray;
+
+	/**
+	 * toString
+	 */
+
+	var str = Object.prototype.toString;
+
+	/**
+	 * Whether or not the given `val`
+	 * is an array.
+	 *
+	 * example:
+	 *
+	 *        isArray([]);
+	 *        // > true
+	 *        isArray(arguments);
+	 *        // > false
+	 *        isArray('');
+	 *        // > false
+	 *
+	 * @param {mixed} val
+	 * @return {bool}
+	 */
+
+	module.exports = isArray || function (val) {
+	  return !! val && '[object Array]' == str.call(val);
 	};
 
 
