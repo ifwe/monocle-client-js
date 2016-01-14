@@ -139,7 +139,7 @@
 	            } else if (result.status === 304) {
 	                batched[i].resolve(batched[i].cached);
 	            } else {
-	                batched[i].reject(resource);
+	                batched[i].reject(result.body);
 	            }
 	        })
 	    }).catch(function(error) {
