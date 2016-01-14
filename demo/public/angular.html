@@ -91,6 +91,7 @@
             <button type="submit">Fetch One</button>
             <button type="button" ng-click="demo.batch()">Add to Batch</button>
             <button type="button" ng-click="demo.fetchBatched()">Fetch Batched</button>
+            <button type="button" ng-click="demo.fetchCollection()">Fetch Collection</button>
         </div>
     </form>
 
@@ -109,10 +110,15 @@
         <pre>{{ demo.batched | json:2 }}</pre>
     </div>
 
+    <div class="user box" ng-if="demo.users">
+        <h2>Users</h2>
+        <pre>{{ demo.users | json:2 }}</pre>
+    </div>
+
     <div class="cached box">
         <h2>Cache</h2>
         <ul>
-            <li ng-repeat="(key, cache) in demo.cached">
+            <li ng-repeat="(key, cache) in demo.cached track by cache.value.$id">
                 <h3 ng-click="shown = !shown">{{ key }}</h3>
                 <pre ng-show="shown">{{ cache | json:2 }}</pre>
             </li>
@@ -163,6 +169,24 @@ app.service('Users', function(monocle) {
             this.cached = monocle.getCache().getAll();
         }.bind(this));
     };
+
+    this.getAll = function() {
+        var props = Object.keys(this.properties)
+        .filter(function(prop) {
+            return this.properties[prop];
+        }.bind(this))
+        .map(function(prop) {
+            return 'items@' + prop;
+        });
+
+        return monocle.get('/users', {
+            props: props
+        })
+        .finally(function() {
+            // Expose the cached items for demo purposes
+            this.cached = monocle.getCache().getAll();
+        }.bind(this));
+    };
 });
 
 app.controller('DemoCtrl', function(Users, $scope) {
@@ -184,6 +208,7 @@ app.controller('DemoCtrl', function(Users, $scope) {
     this.fetchBatched = function() {
         this.fetching = true;
         this.batched = [];
+        this.users = [];
         this.toBatch.forEach(function(id) {
             Users.get(id)
             .then(function(user) {
@@ -199,9 +224,28 @@ app.controller('DemoCtrl', function(Users, $scope) {
         }.bind(this));
     };
 
+    this.fetchCollection = function() {
+        this.error = null;
+        this.fetching = true;
+
+        Users.getAll()
+        .then(function(users) {
+            this.users = users;
+        }.bind(this))
+        .catch(function(error) {
+            this.users = null;
+            this.error = error;
+        }.bind(this))
+        .finally(function() {
+            this.fetching = false;
+            this.cached = Users.cached;
+        }.bind(this));;
+    };
+
     this.fetch = function() {
         this.error = null;
         this.fetching = true;
+        this.users = null;
 
         Users.get(this.userId)
         .then(function(user) {
