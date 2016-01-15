@@ -2916,6 +2916,7 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	var sha256 = __webpack_require__(14);
+	var qs = __webpack_require__(10);
 
 	/**
 	 * Given a collection and request details,
@@ -2964,7 +2965,7 @@
 	    var props = [].concat(this.props || []).sort();
 
 	    // 3. Gather all other query string parameters
-	    var query = (this.query || '')
+	    var query = (typeof this.query === 'string' ? this.query : qs.stringify(this.query))
 	    .replace(/^\?/, '')             // remove "?" from beginning of string
 	    .split('&')                     // create array of keyvalue parts
 	    .filter(function(keyvalue) {    // filter out "props" query string param
