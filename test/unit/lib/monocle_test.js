@@ -115,6 +115,33 @@ describe('Monocle API Client', function() {
                 $id: '/cacheable'
             });
 
+            [
+                'post',
+                'put',
+                'patch',
+                'delete'
+            ].forEach(function(method) {
+                this.http.mock(method.toUpperCase(), '/cacheable').resolvesWith({
+                    $httpStatus: 200
+                });
+            }.bind(this));
+
+            this.http.mock('GET', '/cacheable', {
+                query: { foo: 'foo', bar: 'bar' }
+            }).resolvesWith({
+                foo: 'test cacheable',
+                $expires: 5000,
+                $id: '/cacheable'
+            });
+
+            this.http.mock('GET', '/cacheable', {
+                query: { foo: 'changed', bar: 'bar' }
+            }).resolvesWith({
+                foo: 'test cacheable',
+                $expires: 5000,
+                $id: '/cacheable'
+            });
+
             this.complexCacheable = {
                 name: 'Joe',
                 photo: { url: 'joe.jpg' },
@@ -174,6 +201,30 @@ describe('Monocle API Client', function() {
                     result1.should.deep.equal(result2);
                 }.bind(this));
             }.bind(this));
+        });
+
+        [
+            'post',
+            'put',
+            'patch',
+            'delete'
+        ].forEach(function(method) {
+            it('removes cached value if resource updated via ' + method, function() {
+                var promise = this.api.get('/cacheable');
+                this.clock.tick();
+
+                return promise.then(function(result1) {
+                    this.http.request.calledOnce.should.be.true;
+                    // Change the resource
+                    var promise2 = this.api[method]('/cacheable');
+                    this.clock.tick();
+                    this.http.request.calledTwice.should.be.true;
+                    // Try to GET it again -- should be a cache miss
+                    this.api.get('/cacheable');
+                    this.clock.tick();
+                    this.http.request.calledThrice.should.be.true;
+                }.bind(this));
+            });
         });
 
         [
@@ -242,6 +293,78 @@ describe('Monocle API Client', function() {
                 return promise2.then(function(result2) {
                     this.http.request.calledTwice.should.be.true;
                     result1.should.equal(result2);
+                }.bind(this));
+            }.bind(this));
+        });
+
+        it('makes new http request if query changes', function() {
+            var promise1 = this.api.get('/cacheable', {
+                query: { foo: 'foo', bar: 'bar' }
+            });
+            this.clock.tick();
+
+            return promise1.then(function(result1) {
+                this.clock.tick();
+                var promise2 = this.api.get('/cacheable', {
+                    query: { foo: 'changed', bar: 'bar' }
+                });
+                this.clock.tick();
+
+                return promise2.then(function(result2) {
+                    this.http.request.calledTwice.should.be.true;
+                }.bind(this));
+            }.bind(this));
+        });
+
+        it('makes new http request if query params are added', function() {
+            var promise1 = this.api.get('/cacheable');
+            this.clock.tick();
+
+            return promise1.then(function(result1) {
+                this.clock.tick();
+                var promise2 = this.api.get('/cacheable', {
+                    query: { foo: 'foo', bar: 'bar' }
+                });
+                this.clock.tick();
+
+                return promise2.then(function(result2) {
+                    this.http.request.calledTwice.should.be.true;
+                }.bind(this));
+            }.bind(this));
+        });
+
+        it('makes new http request if query params are removed', function() {
+            var promise1 = this.api.get('/cacheable', {
+                query: { foo: 'foo', bar: 'bar' }
+            });
+            this.clock.tick();
+
+            return promise1.then(function(result1) {
+                this.clock.tick();
+                var promise2 = this.api.get('/cacheable');
+                this.clock.tick();
+
+                return promise2.then(function(result2) {
+                    this.http.request.calledTwice.should.be.true;
+                }.bind(this));
+            }.bind(this));
+        });
+
+        it('does not make new http request if query order changes', function() {
+            var promise1 = this.api.get('/cacheable', {
+                query: { foo: 'foo', bar: 'bar' }
+            });
+            this.clock.tick();
+
+            return promise1.then(function(result1) {
+                this.clock.tick();
+                var promise2 = this.api.get('/cacheable', {
+                    query: { bar: 'bar', foo: 'foo' }
+                });
+                this.clock.tick();
+
+                return promise2.then(function(result2) {
+                    this.http.request.calledOnce.should.be.true;
                 }.bind(this));
             }.bind(this));
         });
