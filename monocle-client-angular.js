@@ -2939,6 +2939,11 @@
 	        return false;
 	    }
 
+	    if (!Array.isArray(this.collection.items)) {
+	        // Unable to create an id without items
+	        return false;
+	    }
+
 	    var hasMissingIdentity = false;
 	    var items = this.collection.items;
 
