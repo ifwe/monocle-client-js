@@ -148,29 +148,28 @@ describe('Resource Cache', function() {
             });
         });
 
-        it('can be removed by tag name', function() {
+        it('can be removed by resource name', function() {
             var resource = {
-                $id: 'test_key',
+                $id: 'test_key_1',
                 $expires: null,
                 value: 'test'
             };
-            var resource2 = {
-                $id: 'test_key2',
-                $expires: 1000,
-                value: 'test2'
+             var resource2 = {
+                $id: 'test_key_2',
+                $expires: null,
+                value: 'test'
             };
-            var resource3 = {
-                $id: 'test_key3',
-                $expires: 1000,
-                value: 'test3'
-            };
-            var cacheKey = this.cache.put(resource, 'foo'); // single tag
-            var cacheKey2 = this.cache.put(resource2, ['foo', 'bar']); // multiple tags
-            var cacheKey3 = this.cache.put(resource3, 'bar');
-            this.cache.removeMatchingTag('foo');
-            expect(this.cache.get(cacheKey)).to.be.undefined;
+            var cacheKey1 = this.cache.put(resource, { foo: 'foo' }); // single tag
+            var cacheKey2 = this.cache.put(resource, { foo: 'bar' }); // multiple tags
+            var cacheKey3 = this.cache.put(resource2, { foo: 'foo' });
+            var cacheKey4 = this.cache.put(resource2, { foo: 'bar' });
+
+            this.cache.removeMatchingTag('test_key_1');
+
+            expect(this.cache.get(cacheKey1)).to.be.undefined;
             expect(this.cache.get(cacheKey2)).to.be.undefined;
-            this.cache.get(cacheKey3).should.deep.equal(resource3);
+            this.cache.get(cacheKey3).should.deep.equal(resource2);
+            this.cache.get(cacheKey4).should.deep.equal(resource2);
         });
     });
 
