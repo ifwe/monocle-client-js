@@ -182,8 +182,11 @@
 	            var queuedGet = getQueuedGet.call(this, path, options);
 	            if (queuedGet) return queuedGet;
 
+	            var cacheKey = this._cache.generateCacheKey(path, options && options.query);
+
 	            // Check cache if attempting to get resource
-	            cached = this._cache.get(path);
+	            cached = this._cache.get(cacheKey);
+
 	            if (cached && isResourceComplete(cached, options.props)) {
 	                // Collections need to validate etag with the server first
 	                if ('collection' === cached.$type) {
@@ -205,7 +208,7 @@
 	        case 'delete':
 	        case 'patch':
 	            // Remove from cache when resource is being updated or removed
-	            this._cache.remove(path);
+	            this._cache.removeMatchingTag(path);
 	            break;
 	    }
 
@@ -227,7 +230,7 @@
 	        });
 	        updateBatchTimeout.call(this);
 	    }.bind(this)))
-	    .then(cacheResource.bind(this, method))
+	    .then(cacheResource.bind(this, method, options))
 	    .finally(clearQueuedGet.bind(this, path, options));
 
 	    if (method === 'get') {
@@ -345,9 +348,9 @@
 	    return true;
 	};
 
-	function cacheResource(method, resource) {
+	function cacheResource(method, options, resource) {
 	    if ('get' === method) {
-	        this._cache.put(resource);
+	        this._cache.put(resource, options && options.query);
 	    }
 	    return resource;
 	};
@@ -387,8 +390,8 @@
 	    return this._backend.get(cacheKey);
 	};
 
-	Store.prototype.put = function(cacheKey, value, ttl) {
-	    return this._backend.put(cacheKey, value, ttl);
+	Store.prototype.put = function(cacheKey, query) {
+	    return this._backend.put(cacheKey, query);
 	};
 
 	Store.prototype.remove = function(cacheKey) {
@@ -397,6 +400,14 @@
 
 	Store.prototype.getAll = function() {
 	    return this._backend.getAll();
+	};
+
+	Store.prototype.removeMatchingTag = function(tag) {
+	    return this._backend.removeMatchingTag(tag);
+	};
+
+	Store.prototype.generateCacheKey = function(object, query) {
+	    return this._backend.generateCacheKey(object, query);
 	};
 
 	module.exports = Store;
@@ -410,10 +421,27 @@
 
 	var clone = __webpack_require__(4);
 	var MemoryCache = __webpack_require__(9);
+	var querystring = __webpack_require__(10);
 
 	function ResourceCache(cacheId, options) {
 	    this._cache = new MemoryCache(cacheId, options);
 	}
+
+	ResourceCache.prototype.generateCacheKey = function(path, query) {
+	    if (!query) {
+	        return path;
+	    }
+
+	    // Sort the query string parameters, because order doesn't matter
+	    var sortedQuery = Object.keys(query)
+	    .map(function(key) {
+	        var obj = {};
+	        obj[key] = query[key];
+	        return querystring.stringify(obj);
+	    }).sort();
+
+	    return path + '?' + sortedQuery.join('&');
+	};
 
 	ResourceCache.prototype.get = function(cacheKey) {
 	    return getFromCache.call(this, cacheKey);
@@ -470,8 +498,8 @@
 	    return this._cache.getAll();
 	};
 
-	ResourceCache.prototype.put = function(resource, tags) {
-	    var entry = put.call(this, resource, tags);
+	ResourceCache.prototype.put = function(resource, query) {
+	    var entry = put.call(this, resource, query);
 	    if (entry) {
 	        return entry.key;
 	    } else {
@@ -479,7 +507,7 @@
 	    }
 	};
 
-	var put = function(resource, tags) {
+	var put = function(resource, query) {
 	    // Not a resource? Ignore it.
 	    if (!resource.hasOwnProperty('$id') || !resource.hasOwnProperty('$expires')) {
 	        return;
@@ -489,10 +517,13 @@
 
 	    putNestedResources.call(this, clonedResource);
 
-	    return this._cache.put(clonedResource.$id, clonedResource, clonedResource.$expires, tags);
+	    var cacheKey = this.generateCacheKey(clonedResource.$id, query);
+	    var tags = [resource.$id];
+
+	    return this._cache.put(cacheKey, clonedResource, clonedResource.$expires, tags);
 	};
 
-	var putNestedResources = function(obj, tags) {
+	var putNestedResources = function(obj) {
 	    var keys = Object.keys(obj);
 	    for(var i=0; i<keys.length; i++) {
 	        var key = keys[i];
@@ -500,9 +531,9 @@
 	            continue;
 	        }
 	        if (obj[key].hasOwnProperty('$id') && obj[key].hasOwnProperty('$expires')) {
-	            obj[key] = put.call(this, obj[key], tags);
+	            obj[key] = put.call(this, obj[key]);
 	        } else if (typeof obj[key] === 'object') {
-	            putNestedResources.call(this, obj[key], tags);
+	            putNestedResources.call(this, obj[key]);
 	        }
 	    }
 	}
