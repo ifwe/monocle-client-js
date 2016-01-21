@@ -13,7 +13,9 @@ describe('Angular Adapter', function() {
             }
         };
         this.$q = Promise;
+        this.path = '/';
         this.adapter = new AngularAdapter(this.$http, this.$q, this.$window);
+        this.clock = sinon.useFakeTimers(10000);
     });
 
     it('is a constructor', function() {
@@ -25,15 +27,31 @@ describe('Angular Adapter', function() {
             this.adapter.request.should.be.a('function');
         });
 
+        it('appends cache buster to GET without query string', function() {
+            return this.adapter.request('get', '/foo')
+            .then(function(result) {
+                this.$http.calledOnce.should.be.true;
+                this.$http.lastCall.args[0].should.have.property('url', '/foo?_10000');
+            }.bind(this));
+        });
+
+        it('appends cache buster to GET with query string', function() {
+            return this.adapter.request('get', '/foo?bar=test_bar')
+            .then(function(result) {
+                this.$http.calledOnce.should.be.true;
+                this.$http.lastCall.args[0].should.have.property('url', '/foo?bar=test_bar&_10000');
+            }.bind(this));
+        });
+
         ['get', 'post', 'put', 'patch', 'delete'].forEach(function(method) {
             describe('with http method: ' + method, function() {
                 it('makes ' + method + ' request using $http', function() {
                     return this.adapter.request(method, '/foo')
                     .then(function(result) {
-                        this.$http.calledWith({
-                            url: '/foo',
-                            method: method.toUpperCase()
-                        });
+                        this.$http.calledOnce.should.be.true;
+                        this.$http.lastCall.args[0].should.have.property('url');
+                        this.$http.lastCall.args[0].url.should.contain('/foo');
+                        this.$http.lastCall.args[0].should.have.property('method', method.toUpperCase());
                     }.bind(this));
                 });
 
