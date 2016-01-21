@@ -3263,8 +3263,15 @@
 	            headers[headerKeys[i]] = results[i];
 	        }
 
+	        // Add cache buster to GETs -- we manage the cache ourselves.
+	        var upperCaseMethod = method.toUpperCase();
+	        if (upperCaseMethod === 'GET') {
+	            path += (-1 === path.indexOf('?') ? '?' : '&');
+	            path += '_' + (new Date()).getTime();
+	        }
+
 	        return this._$http({
-	            method: method.toUpperCase(),
+	            method: upperCaseMethod,
 	            url: path,
 	            timeout: this._timeout,
 	            headers: headers,
