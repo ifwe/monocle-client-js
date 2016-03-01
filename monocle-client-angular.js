@@ -120,11 +120,21 @@
 	    }
 
 	    var envelopes = batched.map(function(data) {
+	        var body;
+
+	        // Extract the body from the options
+	        // and pass it along as its own property in the request envelope.
+	        if (data.options && data.options.body) {
+	            body = data.options.body;
+	            delete data.options.body;
+	        }
+
 	        return {
 	            method: data.method,
 	            url: data.url,
 	            headers: data.headers,
 	            options: data.options,
+	            body: body,
 	            resolve: data.resolve,
 	            reject: data.reject
 	        };
@@ -487,7 +497,12 @@
 	            continue;
 	        }
 	        if (obj[key].hasOwnProperty('key') && obj[key].hasOwnProperty('value') && obj[key].hasOwnProperty('expiration')) {
-	            obj[key] = getFromCache.call(this, obj[key].key);
+	            var cacheValue = getFromCache.call(this, obj[key].key);
+
+	            //Only set the object value if getFromCache does not return an undefined object
+	            if (typeof cacheValue !== 'undefined') {
+	                obj[key] = cacheValue;
+	            }
 	        } else {
 	            getNestedResourcesFromCache.call(this, obj[key]);
 	        }
