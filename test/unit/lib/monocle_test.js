@@ -625,6 +625,44 @@ describe('Monocle API Client', function() {
                 promise2.isRejected().should.be.true;
             });
         });
+
+        it('batches calls with bodies', function() {
+            this.http.mockAny([
+                { status: 200, body: {}},
+                { status: 200, body: {}}
+            ]);
+
+            var promise1 = this.api.patch('/foo', {
+                body: {
+                    foo: 'test foo'
+                }
+            });
+            var promise2 = this.api.patch('/bar', {
+                body: {
+                    bar: 'test bar'
+                }
+            });
+
+            this.clock.tick();
+
+            return Promise.all([
+                promise1,
+                promise2
+            ]).then(function(results) {
+                var envelopes = this.http.request.lastCall.args[2].body;
+                envelopes.should.be.an('array');
+                envelopes.should.have.lengthOf(2);
+                envelopes[0].should.be.an('object');
+                envelopes[0].should.have.property('body');
+                envelopes[0].body.should.contain({
+                    foo: 'test foo'
+                });
+            }.bind(this))
+            .catch(function(error) {
+                console.log('error', error);
+                return Promise.reject(error);
+            });
+        });
     });
 
     describe('duplicate GETs', function() {
