@@ -1,6 +1,6 @@
 {
   "name": "monocle-client-js",
-  "version": "0.0.14",
+  "version": "0.1.0",
   "authors": [
     "Hector Virgen <hvirgen@ifwe.co>",
     "David Kaminsky <dkaminsky@ifwe.co>"
@@ -10,7 +10,8 @@
   "keywords": [
     "Monocle",
     "Angular",
-    "Api"
+    "Api",
+    "jQuery"
   ],
   "license": "MIT",
   "ignore": [
@@ -21,6 +22,7 @@
     "test"
   ],
   "dependencies": {
-    "angular": "~1.4.5"
+    "angular": "~1.4.5",
+    "jquery": "~1.12.2"
   }
 }

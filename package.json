@@ -1,7 +1,7 @@
 {
   "name": "monocle-client-js",
-  "version": "0.0.14",
-  "description": "JS client for Monocle APIs",
+  "version": "0.1.0",
+  "description": "JS client for Monocle APIs, supporting Angular and jQuery",
   "main": "lib/index.js",
   "scripts": {
     "test": "grunt test",
