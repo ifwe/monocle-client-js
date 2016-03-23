@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript" src="./jquery.min.js"></script>
+<script type="text/javascript" src="./bluebird.js"></script>
+<script type="text/javascript" src="./monocle-client-jquery-min.js"></script>
+</head>
+<body>
+<style>
+body{
+    background: #444;
+    color: #ccc;
+    font-size: 125%;
+    font-family: arial;
+    margin: 1em;
+    padding: 0;
+}
+
+pre{
+    font-family: Monaco, monospace;
+}
+
+input[type="number"]{
+    font: inherit;
+}
+
+pre#result{
+    border: 1px solid #cc3;
+    padding: 0.5em;
+    margin: 1em 0;
+    box-shadow: 0 1em 1em -0.5em rgba(0, 0, 0, 0.4);
+    border-radius: 0.25em;
+    color: #333;
+    background: #ffa;
+}
+
+pre#result.error{
+    background: #fdd;
+    border-color: #c33;
+}
+
+pre#result.success{
+    background: #dfd;
+    border-color: #3c3;
+}
+</style>
+<pre>/users/<input type="number" id="userId" min="1" max="1000" value="1" /></pre>
+<pre id="result"></pre>
+<script>
+    $.monocle.setBase('/demo')
+
+    var $result = $('#result');
+
+    $('#userId')
+    .on('input', function() {
+        var $this = $(this)
+        var userId = $this.val()
+
+        $result.addClass('loading');
+        $result.text('loading...');
+        $result.removeClass('success');
+        $result.removeClass('error');
+
+        $.monocle.get('/users/' + userId)
+        .then(function(result) {
+            $result.addClass('success');
+            $result.text(JSON.stringify(result, null, 2))
+        })
+        .catch(function(error) {
+            $result.addClass('error');
+            $result.text(JSON.stringify(error, null, 2))
+        })
+        .finally(function() {
+            $result.removeClass('loading');
+        })
+    })
+    .trigger('input')
+</script>
+</body>
