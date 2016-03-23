@@ -88,7 +88,8 @@ module.exports = function(grunt) {
         uglify: {
             angular: {
                 files: {
-                    'monocle-client-angular-min.js': ['monocle-client-angular.js']
+                    'monocle-client-angular-min.js': ['monocle-client-angular.js'],
+                    'monocle-client-jquery-min.js': ['monocle-client-jquery.js']
                 }
             }
         },
@@ -113,6 +114,18 @@ module.exports = function(grunt) {
                 output: {
                     path: './',
                     filename: 'monocle-client-angular.js'
+                },
+                stats: {
+                    colors: false,
+                    modules: true,
+                    reasons: true
+                }
+            },
+            jquery: {
+                entry: './lib/jquery.js',
+                output: {
+                    path: './',
+                    filename: 'monocle-client-jquery.js'
                 },
                 stats: {
                     colors: false,

@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "scripts": {
     "test": "grunt test",
-    "demo": "grunt build && cp monocle-client-angular*.js demo/public && cp node_modules/bluebird/js/browser/bluebird.js demo/public && nodemon demo/index.js"
+    "demo": "grunt build && cp monocle-client-angular*.js demo/public && cp monocle-client-jquery*.js demo/public && cp node_modules/bluebird/js/browser/bluebird.js demo/public && nodemon demo/index.js"
   },
   "repository": {
     "type": "git",
@@ -26,6 +26,7 @@
   "dependencies": {
     "bluebird": "2.10.1",
     "clone": "1.0.2",
+    "jquery": "1.12.2",
     "monocle-api": "0.2.1",
     "request": "2.37.0",
     "tiny-sha256": "1.0.2"
@@ -42,6 +43,7 @@
     "grunt-docco": "0.3.3",
     "grunt-mocha-test": "0.11.0",
     "grunt-webpack": "1.0.11",
+    "jsdom": "3.1.2",
     "memwatch": "0.2.2",
     "mocha": "1.20.1",
     "sinon": "1.10.3",
