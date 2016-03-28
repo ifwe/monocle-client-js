@@ -2622,7 +2622,7 @@
 
 	    ttl = parseInt(ttl, 10);
 
-	    if (isFinite(ttl) && ttl > 0) {
+	    if (isFinite(ttl) && ttl >= 0) {
 	        entry.expiration = new Date(new Date().getTime() + ttl);
 	    }
 
