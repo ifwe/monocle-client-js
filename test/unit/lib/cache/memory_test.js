@@ -72,6 +72,13 @@ describe('Memory Cache', function() {
             expect(this.cache.get('test_key')).to.be.undefined;
         });
 
+        it('get returns undefined for entry with expired being 0', function() {
+            this.cache.put('test_key', 42, 0);
+            this.cache.get('test_key').should.equal(42);
+            this.clock.tick(1);
+            expect(this.cache.get('test_key')).to.be.undefined;
+        });
+
         [
             -1,
             -1000,
