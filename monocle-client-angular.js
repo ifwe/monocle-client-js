@@ -186,6 +186,39 @@
 	    var headers = {};
 	    var cached = null;
 
+	    // Validate props
+	    if (options && options.props) {
+	        var propRegex = /^[a-zA-Z0-9\@\.\$_-]+$/;
+
+	        var invalidPropsError = {
+	            code: 422, // malformed request
+	            message: 'Invalid props, expecting an array of strings'
+	        };
+
+	        var missingPropsError = {
+	            code: 422, // malformed request
+	            message: 'Invalid props, expecting one or more'
+	        };
+
+	        if (!Array.isArray(options.props)) {
+	            return Promise.reject(invalidPropsError);
+	        }
+
+	        if (!options.props.length) {
+	            return Promise.reject(missingPropsError);
+	        }
+
+	        for (var i = 0, len = options.props.length; i < len; i++) {
+	            if (typeof options.props[i] !== 'string') {
+	                return Promise.reject(invalidPropsError);
+	            }
+
+	            if (!options.props[i].match(propRegex)) {
+	                return Promise.reject(invalidPropsError);
+	            }
+	        }
+	    }
+
 	    switch (method) {
 	        case 'get':
 	            // Check if this GET is already queued
