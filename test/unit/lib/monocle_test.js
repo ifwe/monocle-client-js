@@ -53,6 +53,75 @@ describe('Monocle API Client', function() {
                     this.http.request.calledWith(method.toUpperCase(), '/foo?props=alpha%2Cbeta%2Cgamma').should.be.true;
                 });
 
+                it('returns rejected promise if props is not an array', function() {
+                    var promise = this.api[method]('/foo', {
+                        props: 'any string'
+                    });
+                    this.clock.tick();
+                    return promise
+                    .then(function(result) {
+                        throw new Error("Did not expect promise to resolve");
+                    })
+                    .catch(function(error) {
+                        error.should.contain({
+                            code: 422,
+                            message: 'Invalid props, expecting an array of strings'
+                        });
+                    });
+                });
+
+                it('returns rejected promise if props is an empty array', function() {
+                    var promise = this.api[method]('/foo', {
+                        props: []
+                    });
+                    this.clock.tick();
+                    return promise
+                    .then(function(result) {
+                        throw new Error("Did not expect promise to resolve");
+                    })
+                    .catch(function(error) {
+                        error.should.contain({
+                            code: 422,
+                            message: 'Invalid props, expecting one or more'
+                        });
+                    });
+                });
+
+                [
+                    null,
+                    true,
+                    false,
+                    '',
+                    '      ',
+                    ' anything ',
+                    '☃',
+                    {},
+                    [],
+                    0,
+                    1,
+                    -1,
+                    1.23,
+                    Infinity,
+                    function() {}
+                ].forEach(function(invalidProp) {
+                    it('returns rejected promise if props contains an invalid prop: ' + JSON.stringify(invalidProp), function() {
+                        var promise = this.api[method]('/foo', {
+                            props: ['foo', 'bar', invalidProp, 'derp', 'berp']
+                        });
+                        this.clock.tick();
+                        return promise
+                        .then(function(result) {
+                            throw new Error("Did not expect promise to resolve");
+                        })
+                        .catch(function(error) {
+                            error.should.contain({
+                                code: 422,
+                                message: 'Invalid props, expecting an array of strings'
+                            });
+                        });
+                    });
+                });
+
                 it('appends query object to query string with no props', function() {
                     this.http.mock(method, '/foo', {
                         query: {offset: 1, limit: 3},
