@@ -29,7 +29,7 @@ describe('Node HTTP Adapter', function() {
                 });
 
                 describe('errors', function() {
-                    it('rejects with error', function() {
+                    it('rejects with error if unknown', function() {
                         this.deferred.reject('test error');
 
                         return this.adapter.request(method, this.path, this.options, this.body)
@@ -40,6 +40,37 @@ describe('Node HTTP Adapter', function() {
                             error.should.equal('test error');
                         });
                     });
+
+                    it('rejects with 404 if invalid URI is sent (host is invalid/has not been set or URI does not exist)', function() {
+                        this.deferred.reject({name: 'RequestError', message: 'Invalid URI'});
+
+                        return this.adapter.request(method, this.path, this.options, this.body)
+                        .then(function(result) {
+                            throw new Error('did not expect success handler to be called');
+                        })
+                        .catch(function(error) {
+                            error.should.deep.equal({
+                                code: 404, // malformed request
+                                message: 'Invalid URI sent',
+                                error: "NOT FOUND"
+                            });
+                        });
+                    });
+
+                    it('rejects with API error', function() {
+                        this.deferred.reject({name: 'StatusCode', error: '{"code": 403}'});
+
+                        return this.adapter.request(method, this.path, this.options, this.body)
+                        .then(function(result) {
+                            throw new Error('did not expect success handler to be called');
+                        })
+                        .catch(function(error) {
+                            error.should.deep.equal({
+                                code: 403
+                            });
+                        });
+                    });
+
                 })
 
                 describe('successfull calls', function() {
