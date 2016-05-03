@@ -89,3 +89,27 @@ monocleProvider.setHost('http://www.yourhost.com');
 // All API calls will automatically be mounted onto this base path.
 monocleProvider.setBase('/api/v2');
 ```
+
+To make a request with the node adapter or with the monocle client
+
+```js
+// FOR GET
+//The second parameter takes an optional object where props or query can be passed in
+monocleProvider.get('/enpoint', {props: PROPS, query: QUERY);
+
+//FOR POST, PUT, PATCH OR DELETE
+//The second parameter takes an optional object where the body of the request can be passed in
+//Note: Currently the node adapter does not support the body parameter to be passed in
+monocleProvider.post('/enpoint', {body: {param: 'param1'});
+monocleProvider.patch('/enpoint', {body: {param: 'param1'});
+monocleProvider.put('/enpoint', {body: {param: 'param1'});
+monocleProvider.delete('/enpoint');
+
+//Examples:
+monocleProvider.get('/users/123', {props: ['name'], query: {new: false}});
+monocleProvider.post('/users/345', {body: {name : 'Mariane'}});
+monocleProvider.patch('/users/123', {body: {name : 'Mariane'}});
+monocleProvider.put('/users/123', {body: {name : 'Mariane'}});
+monocleProvider.delete('/users/123'); //Deletes user 123
+```
+

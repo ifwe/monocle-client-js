@@ -7,7 +7,7 @@ describe('Node HTTP Adapter', function() {
     beforeEach(function() {
         this.request = request;
         this.deferred = Promise.defer();
-        this.request = sinon.stub().returns( this.deferred.promise);
+        this.request = sinon.stub().returns(this.deferred.promise);
         this.adapter = new NodeAdapter(this.request);
     });
 
