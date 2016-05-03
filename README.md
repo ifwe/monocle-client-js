@@ -64,3 +64,28 @@ app.config(function(monocleProvider) {
     });
 });
 ```
+
+The monocle node adapter can be configured in your app's config phase.
+
+```js
+var monocle = require('monocle-client-js');
+
+// Configure the Monocle Node Adapter:
+var nodeAdapter = new monocle.nodeAdapter();
+
+// Set a custom timeout to be used by all requests.
+nodeAdapter.setTimeout(30000);
+
+// Set a custom header by value.
+nodeAdapter.setHeader('x-custom-value', 'custom_client_value');
+
+var monocleProvider = new monocle(nodeAdapter);
+
+// Set the host path for API calls.
+// All API calls will automatically be mounted onto this host path.
+monocleProvider.setHost('http://www.yourhost.com');
+
+// Set the base path for API calls.
+// All API calls will automatically be mounted onto this base path.
+monocleProvider.setBase('/api/v2');
+```
