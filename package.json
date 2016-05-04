@@ -29,6 +29,7 @@
     "jquery": "1.12.2",
     "monocle-api": "0.2.1",
     "request": "2.37.0",
+    "request-promise": "3.0.0",
     "tiny-sha256": "1.0.2"
   },
   "homepage": "https://github.com/ifwe/monocle-client-js",
