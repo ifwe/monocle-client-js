@@ -44,16 +44,16 @@
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// Assumes jQuery, Promise is already loaded
-	(function($, Promise) {
+	// Assumes Promise is already loaded
+	(function(context) {
 	    'use strict';
 
 	    var Monocle = __webpack_require__(1);
-	    var JQueryAdapter = __webpack_require__(15);
-	    var http = new JQueryAdapter($, Promise);
+	    var VanillaAdapter = __webpack_require__(15);
+	    var http = new VanillaAdapter(context.XMLHttpRequest, context.Promise);
 
-	    $.monocle = new Monocle(http);
-	})(jQuery, Promise);
+	    context.monocle = new Monocle(http);
+	})(window);
 
 
 /***/ },
@@ -3417,92 +3417,107 @@
 
 	'use strict';
 
-	function jQueryAdapter(jQuery, Promise) {
-	    this._$ = jQuery;
-	    this._Promise = Promise;
+	/**
+	 * Vanilla JS adapter for the browser.
+	 * No framework dependencies, but requires Promises (ES6 or Bluebird)
+	 */
+	var VanillaAdapter = function(XMLHttpRequest, Promise) {
+	    this.XMLHttpRequest = XMLHttpRequest;
+	    this.Promise = Promise;
 	    this._timeout = 30000;
 	    this._headers = {
 	        'Content-Type': 'application/json',
 	        'X-Requested-With': 'XMLHttpRequest'
 	    };
-	}
+	};
 
-	jQueryAdapter.prototype.setTimeout = function(timeout) {
-	    this._timeout = parseInt(timeout, 10) || 30000;
+	VanillaAdapter.prototype.setTimeout = function(timeout) {
+	    this._timeout = timeout;
 	    return this;
 	};
 
-	jQueryAdapter.prototype.setHeader = function(key, value) {
+	VanillaAdapter.prototype.setHeader = function(key, value) {
 	    this._headers[key] = value;
+	    return this;
 	};
 
-	jQueryAdapter.prototype.setHeaders = function(headers) {
-	    for (var i in headers) {
-	        if (!headers.hasOwnProperty(i)) continue;
-	        this.setHeader(i, headers[i]);
+	VanillaAdapter.prototype.setHeaders = function(headers) {
+	    for (var key in headers) {
+	        if (!headers.hasOwnProperty(key)) {
+	            continue;
+	        }
+	        this.setHeader(key, headers[key]);
 	    }
+	    return this;
 	};
 
-	jQueryAdapter.prototype.request = function(method, path, options, customHeaders) {
+	VanillaAdapter.prototype.request = function(method, path, options, customHeaders) {
+	    var upperCaseMethod = method.toUpperCase();
+	    if ('GET' === upperCaseMethod) {
+	        path += (-1 === path.indexOf('?') ? '?' : '&');
+	        path += '_' + (new Date()).getTime();
+	    }
+
+	    var collectedHeaderSources = shallowMerge({}, this._headers, customHeaders);
+
 	    var headerPromises = [];
 	    var headerKeys = [];
 
-	    for (var i in this._headers) {
-	        if (!this._headers.hasOwnProperty(i)) continue;
+	    for (var i in collectedHeaderSources) {
+	        if (!collectedHeaderSources.hasOwnProperty(i)) continue;
 
-	        if (typeof this._headers[i] === 'function') {
-	            headerPromises.push(this._headers[i]());
+	        if (typeof collectedHeaderSources[i] === 'function') {
+	            headerPromises.push(collectedHeaderSources[i]());
 	            headerKeys.push(i);
 	            continue;
 	        }
 
-	        headerPromises.push(this._headers[i]);
+	        headerPromises.push(collectedHeaderSources[i]);
 	        headerKeys.push(i);
 	    }
 
-	    return this._Promise.all(headerPromises)
-	    .then(function(results) {
-	        var headers = customHeaders || {};
+	    return Promise.all(headerPromises)
+	    .then(function(headers) {
+	        return new this.Promise(function(resolve, reject) {
+	            var xhr = new this.XMLHttpRequest();
+	            headerKeys.forEach(function(headerKey, i) {
+	                xhr.setRequestHeader(headerKey, headers[i]);
+	            });
+	            xhr.open(upperCaseMethod, path, true);
+	            xhr.timeout = this._timeout;
+	            xhr.onreadystatechange = function () {
+	                if (xhr.readyState != 4) return;
 
-	        for (var i = 0, len = results.length; i < len; i++) {
-	            if (headers.hasOwnProperty(headerKeys[i])) {
-	                // This header is already set by custom headers, skip
-	                continue;
-	            }
-	            headers[headerKeys[i]] = results[i];
-	        }
-
-	        // Add cache buster to GETs -- we manage the cache ourselves.
-	        var upperCaseMethod = method.toUpperCase();
-	        if (upperCaseMethod === 'GET') {
-	            path += (-1 === path.indexOf('?') ? '?' : '&');
-	            path += '_' + (new Date()).getTime();
-	        }
-
-	        var xhr = this._$.ajax({
-	            method: upperCaseMethod,
-	            url: path,
-	            timeout: this._timeout,
-	            headers: headers,
-	            data: (options && options.body)
-	        });
-
-	        return this._Promise.resolve(xhr)
-	        .catch(function(error) {
-	            // 304 is a special case of errors that can be handled by the client library
-	            if (error.status === 304) {
-	                return this._Promise.reject({
-	                    $httpStatus: 304
-	                });
-	            }
-
-	            // Everything else, forward the error along
-	            return this._Promise.reject(error.responseJSON);
+	                try {
+	                    var body = JSON.parse(xhr.responseText);
+	                } catch (e) {
+	                    reject(e);
+	                }
+	                resolve(body);
+	            };
+	            var body = (options && options.body ? JSON.stringify(options.body) : undefined);
+	            xhr.send(body);
 	        }.bind(this));
 	    }.bind(this));
 	};
 
-	module.exports = jQueryAdapter;
+	var shallowMerge = function(/* args */) {
+	    var destination = arguments[0];
+
+	    for (var i = 1, len = arguments.length; i < len; i++) {
+	        var source = arguments[i];
+	        for (var prop in source) {
+	            if (!source.hasOwnProperty(prop)) {
+	                continue;
+	            }
+	            destination[prop] = source[prop];
+	        }
+	    }
+
+	    return destination;
+	};
+
+	module.exports = VanillaAdapter;
 
 
 /***/ }

@@ -110,7 +110,8 @@ module.exports = function(grunt) {
             angular: {
                 files: {
                     'monocle-client-angular-min.js': ['monocle-client-angular.js'],
-                    'monocle-client-jquery-min.js': ['monocle-client-jquery.js']
+                    'monocle-client-jquery-min.js': ['monocle-client-jquery.js'],
+                    'monocle-client-min.js': ['monocle-client.js']
                 }
             }
         },
@@ -147,6 +148,18 @@ module.exports = function(grunt) {
                 output: {
                     path: './',
                     filename: 'monocle-client-jquery.js'
+                },
+                stats: {
+                    colors: false,
+                    modules: true,
+                    reasons: true
+                }
+            },
+            vanilla: {
+                entry: './lib/vanilla.js',
+                output: {
+                    path: './',
+                    filename: 'monocle-client.js'
                 },
                 stats: {
                     colors: false,
