@@ -1,6 +1,6 @@
 {
   "name": "monocle-client-js",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "JS client for Monocle APIs, supporting Angular and jQuery",
   "main": "lib/index.js",
   "scripts": {
