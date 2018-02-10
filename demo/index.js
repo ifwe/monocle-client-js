@@ -2,7 +2,7 @@ var Promise = require('bluebird');
 var Monocle = require('monocle-api');
 var Resource = Monocle.Resource;
 var Symlink = Monocle.Symlink;
-var Collection = Monocle.Collection;
+var OffsetPaginator = Monocle.OffsetPaginator;
 
 /*** Set up simple HTTP server ***/
 
@@ -74,7 +74,7 @@ api.route('/users', {
                 users.push(new Symlink('/users/' + userId));
             }
         }
-        return new Collection('/users', users, 10000);
+        return new OffsetPaginator('/users', users, 10000);
     }
 });
 
