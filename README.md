@@ -95,15 +95,15 @@ To make a request with the node adapter or with the monocle client
 ```js
 // FOR GET
 //The second parameter takes an optional object where props or query can be passed in
-monocleProvider.get('/enpoint', {props: PROPS, query: QUERY);
+monocleProvider.get('/endpoint', {props: PROPS, query: QUERY);
 
 //FOR POST, PUT, PATCH OR DELETE
 //The second parameter takes an optional object where the body of the request can be passed in
 //Note: Currently the node adapter does not support the body parameter to be passed in
-monocleProvider.post('/enpoint', {body: {param: 'param1'});
-monocleProvider.patch('/enpoint', {body: {param: 'param1'});
-monocleProvider.put('/enpoint', {body: {param: 'param1'});
-monocleProvider.delete('/enpoint');
+monocleProvider.post('/endpoint', {body: {param: 'param1'});
+monocleProvider.patch('/endpoint', {body: {param: 'param1'});
+monocleProvider.put('/endpoint', {body: {param: 'param1'});
+monocleProvider.delete('/endpoint');
 
 //Examples:
 monocleProvider.get('/users/123', {props: ['name'], query: {new: false}});
