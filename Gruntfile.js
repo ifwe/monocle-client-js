@@ -134,7 +134,7 @@ module.exports = function(grunt) {
             angular: {
                 entry: './lib/angular.js',
                 output: {
-                    path: './',
+                    path: __dirname,
                     filename: 'monocle-client-angular.js'
                 },
                 stats: {
@@ -146,7 +146,7 @@ module.exports = function(grunt) {
             jquery: {
                 entry: './lib/jquery.js',
                 output: {
-                    path: './',
+                    path: __dirname,
                     filename: 'monocle-client-jquery.js'
                 },
                 stats: {
@@ -158,7 +158,7 @@ module.exports = function(grunt) {
             vanilla: {
                 entry: './lib/vanilla.js',
                 output: {
-                    path: './',
+                    path: __dirname,
                     filename: 'monocle-client.js'
                 },
                 stats: {
