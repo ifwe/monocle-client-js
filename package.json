@@ -6,6 +6,7 @@
   "scripts": {
     "test": "grunt test",
     "lint": "eslint lib/",
+    "build": "grunt build",
     "typecheck": "tsc",
     "demo": "grunt build && cp monocle-client-angular*.js demo/public && cp monocle-client-jquery*.js demo/public && cp node_modules/bluebird/js/browser/bluebird.js demo/public && nodemon demo/index.js"
   },
