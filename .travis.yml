@@ -6,4 +6,5 @@ before_script:
   - npm install -g grunt-cli
 script:
   - npm run test
-  - node_modules/bin/tsc
+  - npm run lint
+  - npm run typecheck

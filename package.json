@@ -5,6 +5,8 @@
   "main": "lib/index.js",
   "scripts": {
     "test": "grunt test",
+    "lint": "eslint lib/",
+    "typecheck": "tsc",
     "demo": "grunt build && cp monocle-client-angular*.js demo/public && cp monocle-client-jquery*.js demo/public && cp node_modules/bluebird/js/browser/bluebird.js demo/public && nodemon demo/index.js"
   },
   "repository": {
@@ -39,6 +41,7 @@
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "connect": "^3.6.5",
+    "eslint": "^4.19.1",
     "grunt": "^1.0.2",
     "grunt-bump": "^0.8.0",
     "grunt-contrib-clean": "^1.1.0",

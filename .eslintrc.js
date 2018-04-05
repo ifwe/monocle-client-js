@@ -9,6 +9,12 @@ module.exports = {
   "env": {
     // "browser": true,
     "node": true,
-    "mocha": true
+    "mocha": true,
+    "browser": true,
+    "jquery": true
+  },
+  "globals": {
+    "angular": true,
+    "Promise": true,
   }
 }
