@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "outDir": "./built",
+        "checkJs": true,
+        "allowJs": true,
+        "target": "es2015",
+        "types": ["node"],
+        "noEmit": true,
+        "moduleResolution": "node"
+    },
+    "include": [
+        "lib"
+    ],
+    "exclude": [
+    ]
+}

@@ -80,6 +80,7 @@ exports.encode = exports.stringify = __webpack_require__(13);
 
 var monocle = __webpack_require__(2);
 var wrapper = __webpack_require__(16);
+// @ts-ignore
 wrapper(angular, monocle);
 
 
@@ -104,7 +105,7 @@ function Monocle(http, promise) {
     this._queuedGets = {};
     this._promise = promise || Promise;
     this._host = '';
-};
+}
 
 Monocle.prototype.setBase = function(base) {
     this._base = base;
@@ -230,7 +231,7 @@ var _handle = function(method, path, options) {
 
     // Validate props
     if (options && options.props) {
-        var propRegex = /^[a-zA-Z0-9\@\.\$_-]+$/;
+        var propRegex = /^[a-zA-Z0-9@.$_-]+$/;
 
         var invalidPropsError = {
             code: 422, // malformed request
@@ -328,9 +329,9 @@ var _handle = function(method, path, options) {
 /**
  * Returns true if the provided resource fullfills all of the requirements of the options.
  *
- * @param object resource - The resource to check
- * @param object options - Request options
- * @return boolean
+ * @param {object} resource - The resource to check
+ * @param {object} props - Request options
+ * @returns {boolean}
  */
 function isResourceComplete(resource, props) {
     if (!props) {
@@ -338,7 +339,7 @@ function isResourceComplete(resource, props) {
     }
 
     for (var i in props) {
-        if (!props.hasOwnProperty(i)) {
+        if (!Object.prototype.hasOwnProperty.call(props, i)) {
             continue;
         }
 
@@ -348,16 +349,16 @@ function isResourceComplete(resource, props) {
     }
 
     return true;
-};
+}
 
 /**
  * Returns true if the resource contains the specified property according to its path.
  * a.b => reach into object `a` to look for `b` property
  * a@b => reach into array `a` to look for `b` properties on each item
  *
- * @param object resource - The object to check
- * @param string prop - The property path to verify
- * @return boolean
+ * @param {object} resource - The object to check
+ * @param {string} prop - The property path to verify
+ * @returns {boolean}
  */
 function hasProp(resource, prop) {
     if (!prop) {
@@ -400,7 +401,8 @@ function hasProp(resource, prop) {
     // Walk the path to see if the properties exist
     var currentObject = resource;
 
-    for (var i = 0, len = paths.length, path; i < len; i++) {
+    var path;
+    for (i = 0, len = paths.length, path; i < len; i++) {
         if (null === currentObject) {
             // Trying to fetch a nested property from a top-level object that doesn't exist.
             return false;
@@ -431,18 +433,18 @@ function hasProp(resource, prop) {
     }
 
     return true;
-};
+}
 
 function cacheResource(method, options, resource) {
     if ('get' === method) {
         this._cache.put(resource, options && options.query);
     }
     return resource;
-};
+}
 
 function buildFullPath(host, base, path) {
     return host + (base + path).replace(/\/{2,}/g, '/');
-};
+}
 
 function buildQuery(options) {
     var query = {}
@@ -456,7 +458,7 @@ function buildQuery(options) {
     if (options && Array.isArray(options.props)) query.props = options.props.join(',');
 
     return querystring.stringify(query);
-};
+}
 
 module.exports = Monocle;
 
@@ -470,7 +472,7 @@ module.exports = Monocle;
 
 function Store(backend) {
     this._backend = backend;
-};
+}
 
 Store.prototype.get = function(cacheKey) {
     return this._backend.get(cacheKey);
@@ -722,7 +724,13 @@ function clone(parent, circular, depth, prototype) {
     } else if (clone.__isDate(parent)) {
       child = new Date(parent.getTime());
     } else if (useBuffer && Buffer.isBuffer(parent)) {
-      child = new Buffer(parent.length);
+      if (Buffer.allocUnsafe) {
+        // Node.js >= 4.5.0
+        child = Buffer.allocUnsafe(parent.length);
+      } else {
+        // Older Node.js versions
+        child = new Buffer(parent.length);
+      }
       parent.copy(child);
       return child;
     } else {
@@ -2665,6 +2673,8 @@ for (var i = 0, len = code.length; i < len; ++i) {
   revLookup[code.charCodeAt(i)] = i
 }
 
+// Support decoding URL-safe base64 strings, as Node.js does.
+// See: https://en.wikipedia.org/wiki/Base64#URL_applications
 revLookup['-'.charCodeAt(0)] = 62
 revLookup['_'.charCodeAt(0)] = 63
 
@@ -2726,7 +2736,7 @@ function encodeChunk (uint8, start, end) {
   var tmp
   var output = []
   for (var i = start; i < end; i += 3) {
-    tmp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
+    tmp = ((uint8[i] << 16) & 0xFF0000) + ((uint8[i + 1] << 8) & 0xFF00) + (uint8[i + 2] & 0xFF)
     output.push(tripletToBase64(tmp))
   }
   return output.join('')
@@ -2771,7 +2781,7 @@ function fromByteArray (uint8) {
 
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
-  var eLen = nBytes * 8 - mLen - 1
+  var eLen = (nBytes * 8) - mLen - 1
   var eMax = (1 << eLen) - 1
   var eBias = eMax >> 1
   var nBits = -7
@@ -2784,12 +2794,12 @@ exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   e = s & ((1 << (-nBits)) - 1)
   s >>= (-nBits)
   nBits += eLen
-  for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8) {}
+  for (; nBits > 0; e = (e * 256) + buffer[offset + i], i += d, nBits -= 8) {}
 
   m = e & ((1 << (-nBits)) - 1)
   e >>= (-nBits)
   nBits += mLen
-  for (; nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8) {}
+  for (; nBits > 0; m = (m * 256) + buffer[offset + i], i += d, nBits -= 8) {}
 
   if (e === 0) {
     e = 1 - eBias
@@ -2804,7 +2814,7 @@ exports.read = function (buffer, offset, isLE, mLen, nBytes) {
 
 exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   var e, m, c
-  var eLen = nBytes * 8 - mLen - 1
+  var eLen = (nBytes * 8) - mLen - 1
   var eMax = (1 << eLen) - 1
   var eBias = eMax >> 1
   var rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0)
@@ -2837,7 +2847,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
       m = 0
       e = eMax
     } else if (e + eBias >= 1) {
-      m = (value * c - 1) * Math.pow(2, mLen)
+      m = ((value * c) - 1) * Math.pow(2, mLen)
       e = e + eBias
     } else {
       m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen)
@@ -2882,7 +2892,7 @@ function MemoryCache(cacheId, options) {
     if (!this._options.hasOwnProperty('capacity')) {
         this._options.capacity = false;
     }
-};
+}
 
 MemoryCache.prototype.get = function(cacheKey) {
     if (!this._cache.hasOwnProperty(cacheKey)) {
@@ -2921,6 +2931,7 @@ MemoryCache.prototype.put = function(cacheKey, value, ttl, tags) {
         tags = toString.call(tags) == '[object String]' ? [tags] : [];
     }
 
+    /** @type {{key:string,value:any,expiration:Date|false,tags:array}} entry */
     var entry = {
         key: cacheKey,
         value: value,
@@ -3504,6 +3515,7 @@ function angularWrapper(angular, Monocle) {
             this._headers[key] = value;
         };
 
+        // eslint-disable-next-line no-unused-vars
         this.$get = function($http, $q, $window) {
             var angularAdapter = new AngularAdapter($http, $q);
             angularAdapter.setTimeout(this._timeout);
@@ -3524,7 +3536,7 @@ function angularWrapper(angular, Monocle) {
 
         this.$get.$inject = ['$http', '$q'];
     });
-};
+}
 
 module.exports = angularWrapper;
 

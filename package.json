@@ -1,10 +1,13 @@
 {
   "name": "monocle-client-js",
-  "version": "0.3.0",
+  "version": "0.3.1-dev",
   "description": "JS client for Monocle APIs, supporting Angular and jQuery",
   "main": "lib/index.js",
   "scripts": {
     "test": "grunt test",
+    "lint": "eslint lib/",
+    "build": "grunt build",
+    "typecheck": "tsc",
     "demo": "grunt build && cp monocle-client-angular*.js demo/public && cp monocle-client-jquery*.js demo/public && cp node_modules/bluebird/js/browser/bluebird.js demo/public && nodemon demo/index.js"
   },
   "repository": {
@@ -34,10 +37,12 @@
   },
   "homepage": "https://github.com/ifwe/monocle-client-js",
   "devDependencies": {
+    "@types/node": "^9.6.2",
     "body-parser": "^1.18.2",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "connect": "^3.6.5",
+    "eslint": "^4.19.1",
     "grunt": "^1.0.2",
     "grunt-bump": "^0.8.0",
     "grunt-contrib-clean": "^1.1.0",
@@ -52,6 +57,7 @@
     "nodemon": "^1.14.12",
     "serve-static": "^1.13.2",
     "sinon": "^4.2.2",
+    "typescript": "^2.8.1",
     "webpack": "^3.10.0",
     "webpack-dev-server": "^2.11.1"
   }
