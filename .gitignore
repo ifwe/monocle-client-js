@@ -3,5 +3,7 @@ docs
 test/coverage.html
 npm-debug.log
 .idea
+.*.swo
+.*.swp
 demo/public/monocle-client*.js
 demo/public/bluebird.js
