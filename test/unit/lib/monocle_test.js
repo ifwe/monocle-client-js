@@ -594,6 +594,27 @@ describe('Monocle API Client', function() {
                     }.bind(this));
                 }.bind(this));
             });
+
+            it('will make separate api calls if batching is disabled', function() {
+                // Setup: disable batching for this api instance
+                // and mock the expected API endpoints (Should call those instead of POST /_batch)
+                this.api.disableBatching();
+
+                this.http.mock('GET', '/firstthing').resolvesWith({foo: '1thing'});
+                this.http.mock('GET', '/anything').resolvesWith({bar: 'otherThing'});
+
+                // Make two API calls before the clock tick finishes
+                var promise1 = this.api.get('/firstthing');
+                var promise2 = this.api.get('/anything');
+                this.clock.tick();
+
+                return Promise.all([promise1, promise2]).then(function(results) {
+                    var result1 = results[0];
+                    var result2 = results[1];
+                    result1.should.have.property('foo', '1thing');
+                    result2.should.have.property('bar', 'otherThing');
+                }.bind(this));
+            });
         });
     });
 
