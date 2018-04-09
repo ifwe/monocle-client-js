@@ -19,6 +19,8 @@ describe('Angular Wrapper', function() {
 
         this.Monocle = sinon.spy();
         this.Monocle.prototype.setBase = sinon.spy();
+        this.Monocle.prototype.disableBatching = sinon.spy();
+        this.Monocle.prototype.enableBatching = sinon.spy();
 
         wrapper(this.angular, this.Monocle);
     });
@@ -59,6 +61,50 @@ describe('Angular Wrapper', function() {
             provider.setBase('/test');
             var api = provider.$get($http, $q, $window);
             this.Monocle.prototype.setBase.calledWith('/test').should.be.true;
+        });
+
+        it('does not disable batching by default', function() {
+            var $http = {};
+            var $q = {};
+            var $window = {};
+            var provider = new (this.providers.monocle)();
+            var api = provider.$get($http, $q, $window);
+            this.Monocle.prototype.enableBatching.called.should.be.false;
+            this.Monocle.prototype.disableBatching.called.should.be.false;
+        });
+
+        it('can en batching', function() {
+            var $http = {};
+            var $q = {};
+            var $window = {};
+            var provider = new (this.providers.monocle)();
+            provider.disableBatching();
+            var api = provider.$get($http, $q, $window);
+            this.Monocle.prototype.enableBatching.called.should.be.false;
+            this.Monocle.prototype.disableBatching.called.should.be.true;
+        });
+
+        it('can disable batching', function() {
+            var $http = {};
+            var $q = {};
+            var $window = {};
+            var provider = new (this.providers.monocle)();
+            provider.disableBatching();
+            var api = provider.$get($http, $q, $window);
+            this.Monocle.prototype.enableBatching.called.should.be.false;
+            this.Monocle.prototype.disableBatching.called.should.be.true;
+        });
+
+        it('can disable and re-enable batching', function() {
+            var $http = {};
+            var $q = {};
+            var $window = {};
+            var provider = new (this.providers.monocle)();
+            provider.disableBatching();
+            provider.enableBatching();
+            var api = provider.$get($http, $q, $window);
+            this.Monocle.prototype.enableBatching.called.should.be.false;
+            this.Monocle.prototype.disableBatching.called.should.be.false;
         });
     });
 });

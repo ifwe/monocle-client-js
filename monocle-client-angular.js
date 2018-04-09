@@ -3519,9 +3519,18 @@ function angularWrapper(angular, Monocle) {
         this._base = '/';
         this._timeout = 30000;
         this._headers = {};
+        this._enableBatching = true;
 
         this.setBase = function(base) {
             this._base = base;
+        };
+
+        this.enableBatching = function() {
+            this._enableBatching = true;
+        };
+
+        this.disableBatching = function() {
+            this._enableBatching = false;
         };
 
         this.setTimeout = function(timeout) {
@@ -3540,6 +3549,9 @@ function angularWrapper(angular, Monocle) {
 
             var monocle = new Monocle(angularAdapter, $q);
             monocle.setBase(this._base);
+            if (!this._enableBatching) {
+              monocle.disableBatching();
+            }
 
             // Wrap all promises in Angular promises
             ['get', 'post', 'put', 'patch', 'delete', 'options'].forEach(function(method) {
