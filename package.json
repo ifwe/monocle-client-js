@@ -1,6 +1,6 @@
 {
   "name": "monocle-client-js",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "JS client for Monocle APIs, supporting Angular and jQuery",
   "main": "lib/index.js",
   "scripts": {
@@ -27,10 +27,10 @@
     "url": "https://github.com/ifwe/monocle-client-js/issues"
   },
   "dependencies": {
-    "bluebird": "^2.11.0",
+    "bluebird": "^3.7.2",
     "clone": "^1.0.3",
     "jquery": "^3.3.1",
-    "monocle-api": "^1.3.0",
+    "monocle-api": "^3.1.0",
     "request": "^2.83.0",
     "request-promise": "^4.2.2",
     "tiny-sha256": "^1.0.2"
@@ -45,6 +45,7 @@
     "eslint": "^4.19.1",
     "grunt": "^1.0.2",
     "grunt-bump": "^0.8.0",
+    "grunt-cli": "^1.3.2",
     "grunt-contrib-clean": "^1.1.0",
     "grunt-contrib-uglify": "^3.3.0",
     "grunt-contrib-watch": "^1.0.0",
@@ -53,12 +54,11 @@
     "grunt-webpack": "^3.1.1",
     "jsdom": "^7.2.2",
     "method-override": "^2.3.10",
-    "mocha": "^5.0.0",
+    "mocha": "^7.1.0",
     "nodemon": "^1.14.12",
     "serve-static": "^1.13.2",
-    "sinon": "^4.2.2",
-    "typescript": "^2.8.1",
-    "webpack": "^3.11.0",
-    "webpack-dev-server": "^2.11.2"
+    "sinon": "^9.0.1",
+    "typescript": "^3.8.1",
+    "webpack": "^3.12.0"
   }
 }
